@@ -39,7 +39,6 @@ export default function LoginPage() {
 
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('profile', JSON.stringify(profile));
-
         router.push('/dashboard');
       }
     } catch (error) {
@@ -59,27 +58,18 @@ export default function LoginPage() {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            full_name: fullName,
-          }
-        }
+        options: { data: { full_name: fullName } }
       });
 
       if (error) throw error;
 
       if (data.user) {
-        const { error: profileError } = await supabase
+        await supabase
           .from('profiles')
-          .update({
-            full_name: fullName,
-            phone_number: phoneNumber,
-          })
+          .update({ full_name: fullName, phone_number: phoneNumber })
           .eq('id', data.user.id);
 
-        if (profileError) throw profileError;
-
-        setSuccess('Account created successfully! Please sign in.');
+        setSuccess('Account created! Please sign in.');
         setIsSignUp(false);
         setEmail('');
         setPassword('');
@@ -93,180 +83,163 @@ export default function LoginPage() {
     }
   };
 
+  const inputStyle = {
+    width: '100%',
+    padding: '14px 16px',
+    fontSize: '16px',
+    border: '2px solid #E5E7EB',
+    borderRadius: '12px',
+    backgroundColor: '#FFFFFF',
+    transition: 'border-color 0.2s, box-shadow 0.2s',
+    outline: 'none',
+  };
+
   return (
-    <div 
-      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 25%, #DBEAFE 50%, #E9D5FF 75%, #FCE7F3 100%)'
-      }}
-    >
-      {/* Animated Background Circles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div 
-          className="absolute rounded-full opacity-20 blur-3xl"
-          style={{
-            width: '500px',
-            height: '500px',
-            background: 'linear-gradient(135deg, #F59E0B, #EC4899)',
-            top: '-100px',
-            right: '-100px',
-            animation: 'float 20s ease-in-out infinite'
-          }}
-        />
-        <div 
-          className="absolute rounded-full opacity-20 blur-3xl"
-          style={{
-            width: '400px',
-            height: '400px',
-            background: 'linear-gradient(135deg, #14B8A6, #3B82F6)',
-            bottom: '-100px',
-            left: '-100px',
-            animation: 'float 15s ease-in-out infinite reverse'
-          }}
-        />
-      </div>
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    }}>
+      {/* Main Card */}
+      <div style={{
+        width: '100%',
+        maxWidth: '420px',
+        backgroundColor: '#FFFFFF',
+        borderRadius: '24px',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255,255,255,0.1)',
+        overflow: 'hidden',
+      }}>
+        {/* Logo Section */}
+        <div style={{
+          background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+          padding: '40px 30px 30px',
+          textAlign: 'center',
+        }}>
+          <img 
+            src="/tujlogo.webp" 
+            alt="Tujiimarishe SHG" 
+            style={{
+              height: '100px',
+              width: 'auto',
+              marginBottom: '20px',
+              filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))',
+            }}
+          />
+          <h1 style={{
+            fontSize: '28px',
+            fontWeight: '800',
+            color: '#FFFFFF',
+            margin: '0 0 8px 0',
+            letterSpacing: '-0.5px',
+          }}>
+            Tujiimarishe SHG
+          </h1>
+          <p style={{
+            fontSize: '14px',
+            color: 'rgba(255,255,255,0.7)',
+            margin: 0,
+          }}>
+            Self Help Group Management Platform
+          </p>
+        </div>
 
-      {/* Login Card */}
-      <div 
-        className="relative w-full max-w-md"
-        style={{
-          animation: 'slideUp 0.6s ease-out'
-        }}
-      >
-        {/* Glass Card */}
-        <div 
-          className="backdrop-blur-xl rounded-3xl shadow-2xl border overflow-hidden"
-          style={{
-            background: 'rgba(255, 255, 255, 0.85)',
-            borderColor: 'rgba(255, 255, 255, 0.3)',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
-          }}
-        >
-          {/* Logo Section */}
-          <div className="text-center pt-8 pb-6 px-6">
-            <div className="flex justify-center mb-6">
-              <div className="relative">
-                <img 
-                  src="/tujlogo.webp" 
-                  alt="Tujiimarishe SHG Logo" 
-                  className="h-28 w-auto object-contain"
-                  style={{
-                    filter: 'drop-shadow(0 10px 20px rgba(0, 0, 0, 0.1))',
-                    animation: 'pulse 3s ease-in-out infinite'
-                  }}
-                />
-              </div>
-            </div>
-            
-            <h1 
-              className="text-4xl font-extrabold mb-2"
-              style={{
-                background: 'linear-gradient(135deg, #F59E0B 0%, #EC4899 50%, #9333EA 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                letterSpacing: '-0.02em'
-              }}
-            >
-              Tujiimarishe SHG
-            </h1>
-            <p className="text-gray-600 font-medium text-sm">
-              Self Help Group Management Platform
-            </p>
-          </div>
+        {/* Tab Toggle */}
+        <div style={{
+          display: 'flex',
+          padding: '20px 30px 0',
+          gap: '10px',
+        }}>
+          <button
+            onClick={() => { setIsSignUp(false); setError(''); setSuccess(''); }}
+            style={{
+              flex: 1,
+              padding: '14px 20px',
+              fontSize: '15px',
+              fontWeight: '600',
+              border: 'none',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              background: !isSignUp 
+                ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
+                : '#F3F4F6',
+              color: !isSignUp ? '#FFFFFF' : '#6B7280',
+              boxShadow: !isSignUp ? '0 4px 15px rgba(102, 126, 234, 0.4)' : 'none',
+            }}
+          >
+            Sign In
+          </button>
+          <button
+            onClick={() => { setIsSignUp(true); setError(''); setSuccess(''); }}
+            style={{
+              flex: 1,
+              padding: '14px 20px',
+              fontSize: '15px',
+              fontWeight: '600',
+              border: 'none',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              background: isSignUp 
+                ? 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' 
+                : '#F3F4F6',
+              color: isSignUp ? '#FFFFFF' : '#6B7280',
+              boxShadow: isSignUp ? '0 4px 15px rgba(17, 153, 142, 0.4)' : 'none',
+            }}
+          >
+            Sign Up
+          </button>
+        </div>
 
-          {/* Tab Toggle */}
-          <div className="px-6 pb-6">
-            <div 
-              className="relative flex p-1 rounded-xl"
-              style={{
-                background: 'rgba(245, 158, 11, 0.1)',
-                backdropFilter: 'blur(10px)'
-              }}
-            >
-              <button
-                onClick={() => {
-                  setIsSignUp(false);
-                  setError('');
-                  setSuccess('');
-                }}
-                className="relative flex-1 py-3 px-4 rounded-lg font-semibold text-sm transition-all duration-300"
-                style={{
-                  background: !isSignUp 
-                    ? 'linear-gradient(135deg, #F59E0B 0%, #EC4899 100%)' 
-                    : 'transparent',
-                  color: !isSignUp ? 'white' : '#6B7280',
-                  boxShadow: !isSignUp ? '0 10px 25px -5px rgba(245, 158, 11, 0.4)' : 'none',
-                  transform: !isSignUp ? 'scale(1.02)' : 'scale(1)'
-                }}
-              >
-                Sign In
-              </button>
-              <button
-                onClick={() => {
-                  setIsSignUp(true);
-                  setError('');
-                  setSuccess('');
-                }}
-                className="relative flex-1 py-3 px-4 rounded-lg font-semibold text-sm transition-all duration-300"
-                style={{
-                  background: isSignUp 
-                    ? 'linear-gradient(135deg, #14B8A6 0%, #3B82F6 100%)' 
-                    : 'transparent',
-                  color: isSignUp ? 'white' : '#6B7280',
-                  boxShadow: isSignUp ? '0 10px 25px -5px rgba(20, 184, 166, 0.4)' : 'none',
-                  transform: isSignUp ? 'scale(1.02)' : 'scale(1)'
-                }}
-              >
-                Sign Up
-              </button>
-            </div>
-          </div>
-
-          {/* Alert Messages */}
+        {/* Form Section */}
+        <div style={{ padding: '25px 30px 30px' }}>
+          {/* Error Message */}
           {error && (
-            <div 
-              className="mx-6 mb-4 px-4 py-3 rounded-xl border"
-              style={{
-                background: 'rgba(239, 68, 68, 0.1)',
-                borderColor: 'rgba(239, 68, 68, 0.3)',
-                color: '#DC2626',
-                animation: 'shake 0.5s ease-in-out'
-              }}
-            >
-              <div className="flex items-center">
-                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-                <span className="text-sm font-medium">{error}</span>
-              </div>
+            <div style={{
+              padding: '14px 16px',
+              marginBottom: '20px',
+              backgroundColor: '#FEE2E2',
+              border: '1px solid #FECACA',
+              borderRadius: '12px',
+              color: '#DC2626',
+              fontSize: '14px',
+              fontWeight: '500',
+            }}>
+              ⚠️ {error}
             </div>
           )}
 
+          {/* Success Message */}
           {success && (
-            <div 
-              className="mx-6 mb-4 px-4 py-3 rounded-xl border"
-              style={{
-                background: 'rgba(16, 185, 129, 0.1)',
-                borderColor: 'rgba(16, 185, 129, 0.3)',
-                color: '#059669',
-                animation: 'slideDown 0.5s ease-out'
-              }}
-            >
-              <div className="flex items-center">
-                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-sm font-medium">{success}</span>
-              </div>
+            <div style={{
+              padding: '14px 16px',
+              marginBottom: '20px',
+              backgroundColor: '#D1FAE5',
+              border: '1px solid #A7F3D0',
+              borderRadius: '12px',
+              color: '#059669',
+              fontSize: '14px',
+              fontWeight: '500',
+            }}>
+              ✓ {success}
             </div>
           )}
 
           {/* Sign In Form */}
           {!isSignUp && (
-            <form onSubmit={handleLogin} className="px-6 pb-8 space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <form onSubmit={handleLogin}>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#374151',
+                  marginBottom: '8px',
+                }}>
                   Email Address
                 </label>
                 <input
@@ -275,29 +248,26 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your.email@example.com"
                   required
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem 1rem',
-                    border: '2px solid rgba(229, 231, 235, 0.8)',
-                    borderRadius: '0.75rem',
-                    fontSize: '0.9375rem',
-                    transition: 'all 0.3s',
-                    background: 'rgba(255, 255, 255, 0.5)',
-                    backdropFilter: 'blur(10px)'
-                  }}
+                  style={inputStyle}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#F59E0B';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
+                    e.target.style.borderColor = '#667eea';
+                    e.target.style.boxShadow = '0 0 0 4px rgba(102, 126, 234, 0.15)';
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = 'rgba(229, 231, 235, 0.8)';
+                    e.target.style.borderColor = '#E5E7EB';
                     e.target.style.boxShadow = 'none';
                   }}
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <div style={{ marginBottom: '25px' }}>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#374151',
+                  marginBottom: '8px',
+                }}>
                   Password
                 </label>
                 <input
@@ -306,22 +276,13 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem 1rem',
-                    border: '2px solid rgba(229, 231, 235, 0.8)',
-                    borderRadius: '0.75rem',
-                    fontSize: '0.9375rem',
-                    transition: 'all 0.3s',
-                    background: 'rgba(255, 255, 255, 0.5)',
-                    backdropFilter: 'blur(10px)'
-                  }}
+                  style={inputStyle}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#F59E0B';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
+                    e.target.style.borderColor = '#667eea';
+                    e.target.style.boxShadow = '0 0 0 4px rgba(102, 126, 234, 0.15)';
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = 'rgba(229, 231, 235, 0.8)';
+                    e.target.style.borderColor = '#E5E7EB';
                     e.target.style.boxShadow = 'none';
                   }}
                 />
@@ -330,47 +291,49 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full font-bold py-4 rounded-xl transition-all duration-300 mt-6"
                 style={{
+                  width: '100%',
+                  padding: '16px 24px',
+                  fontSize: '16px',
+                  fontWeight: '700',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '12px',
+                  cursor: loading ? 'not-allowed' : 'pointer',
                   background: loading 
                     ? '#9CA3AF' 
-                    : 'linear-gradient(135deg, #F59E0B 0%, #EC4899 50%, #9333EA 100%)',
-                  color: 'white',
-                  boxShadow: loading ? 'none' : '0 10px 30px -5px rgba(245, 158, 11, 0.5)',
-                  transform: loading ? 'scale(1)' : 'scale(1)',
-                  cursor: loading ? 'not-allowed' : 'pointer'
+                    : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  boxShadow: loading ? 'none' : '0 4px 15px rgba(102, 126, 234, 0.4)',
+                  transition: 'all 0.3s',
+                  transform: 'translateY(0)',
                 }}
                 onMouseEnter={(e) => {
                   if (!loading) {
                     e.target.style.transform = 'translateY(-2px)';
-                    e.target.style.boxShadow = '0 15px 35px -5px rgba(245, 158, 11, 0.6)';
+                    e.target.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.5)';
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (!loading) {
-                    e.target.style.transform = 'translateY(0)';
-                    e.target.style.boxShadow = '0 10px 30px -5px rgba(245, 158, 11, 0.5)';
-                  }
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.4)';
                 }}
               >
-                {loading ? (
-                  <span className="flex items-center justify-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Signing in...
-                  </span>
-                ) : 'Sign In'}
+                {loading ? '⏳ Signing in...' : '🚀 Sign In'}
               </button>
             </form>
           )}
 
           {/* Sign Up Form */}
           {isSignUp && (
-            <form onSubmit={handleSignUp} className="px-6 pb-8 space-y-3">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <form onSubmit={handleSignUp}>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#374151',
+                  marginBottom: '8px',
+                }}>
                   Full Name
                 </label>
                 <input
@@ -379,13 +342,18 @@ export default function LoginPage() {
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="John Doe"
                   required
-                  className="input-field"
-                  style={{width: '100%', padding: '0.875rem 1rem', border: '2px solid rgba(229, 231, 235, 0.8)', borderRadius: '0.75rem', background: 'rgba(255, 255, 255, 0.5)', backdropFilter: 'blur(10px)'}}
+                  style={inputStyle}
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#374151',
+                  marginBottom: '8px',
+                }}>
                   Email Address
                 </label>
                 <input
@@ -394,13 +362,18 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your.email@example.com"
                   required
-                  className="input-field"
-                  style={{width: '100%', padding: '0.875rem 1rem', border: '2px solid rgba(229, 231, 235, 0.8)', borderRadius: '0.75rem', background: 'rgba(255, 255, 255, 0.5)', backdropFilter: 'blur(10px)'}}
+                  style={inputStyle}
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#374151',
+                  marginBottom: '8px',
+                }}>
                   Phone Number
                 </label>
                 <input
@@ -409,13 +382,18 @@ export default function LoginPage() {
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   placeholder="+254XXXXXXXXX"
                   required
-                  className="input-field"
-                  style={{width: '100%', padding: '0.875rem 1rem', border: '2px solid rgba(229, 231, 235, 0.8)', borderRadius: '0.75rem', background: 'rgba(255, 255, 255, 0.5)', backdropFilter: 'blur(10px)'}}
+                  style={inputStyle}
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#374151',
+                  marginBottom: '8px',
+                }}>
                   Password
                 </label>
                 <input
@@ -425,80 +403,54 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   minLength="6"
                   required
-                  className="input-field"
-                  style={{width: '100%', padding: '0.875rem 1rem', border: '2px solid rgba(229, 231, 235, 0.8)', borderRadius: '0.75rem', background: 'rgba(255, 255, 255, 0.5)', backdropFilter: 'blur(10px)'}}
+                  style={inputStyle}
                 />
-                <p className="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+                <p style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '6px' }}>
+                  Minimum 6 characters
+                </p>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full font-bold py-4 rounded-xl transition-all duration-300 mt-4"
                 style={{
-                  background: loading ? '#9CA3AF' : 'linear-gradient(135deg, #14B8A6 0%, #3B82F6 100%)',
-                  color: 'white',
-                  boxShadow: loading ? 'none' : '0 10px 30px -5px rgba(20, 184, 166, 0.5)',
-                  cursor: loading ? 'not-allowed' : 'pointer'
+                  width: '100%',
+                  padding: '16px 24px',
+                  fontSize: '16px',
+                  fontWeight: '700',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '12px',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  background: loading 
+                    ? '#9CA3AF' 
+                    : 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+                  boxShadow: loading ? 'none' : '0 4px 15px rgba(17, 153, 142, 0.4)',
+                  transition: 'all 0.3s',
                 }}
               >
-                {loading ? 'Creating account...' : 'Create Account'}
+                {loading ? '⏳ Creating...' : '✨ Create Account'}
               </button>
             </form>
           )}
+        </div>
 
-          {/* Footer */}
-          <div 
-            className="px-6 pb-6 text-center"
-            style={{
-              borderTop: '1px solid rgba(229, 231, 235, 0.5)',
-              paddingTop: '1.5rem'
-            }}
-          >
-            <p className="text-xs text-gray-500">
-              Secure platform powered by Supabase
-            </p>
-          </div>
+        {/* Footer */}
+        <div style={{
+          padding: '20px 30px',
+          backgroundColor: '#F9FAFB',
+          borderTop: '1px solid #E5E7EB',
+          textAlign: 'center',
+        }}>
+          <p style={{
+            fontSize: '13px',
+            color: '#9CA3AF',
+            margin: 0,
+          }}>
+            🔒 Secure platform powered by Supabase
+          </p>
         </div>
       </div>
-
-      {/* CSS Animations */}
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translate(0, 0) rotate(0deg); }
-          33% { transform: translate(30px, -30px) rotate(120deg); }
-          66% { transform: translate(-20px, 20px) rotate(240deg); }
-        }
-        @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.05); }
-        }
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-10px); }
-          75% { transform: translateX(10px); }
-        }
-        @keyframes slideDown {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
     </div>
   );
 }
