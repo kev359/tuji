@@ -27,95 +27,126 @@ export default function Navbar() {
   const isActive = (path) => pathname === path;
 
   return (
-    <nav className="bg-white shadow-lg border-b-4" style={{ borderImage: 'linear-gradient(90deg, #F59E0B, #EC4899, #9333EA) 1' }}>
+    <nav 
+      style={{
+        background: 'rgba(20, 20, 25, 0.85)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255, 159, 10, 0.2)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 40px rgba(255, 159, 10, 0.1)',
+        position: 'relative',
+        zIndex: 10,
+      }}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <div className="flex items-center space-x-4">
             {/* Logo */}
-            <Link href="/dashboard" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+            <Link href="/dashboard" className="flex items-center space-x-3 hover:opacity-80 transition-all group">
               <img 
                 src="/tujlogo.webp" 
                 alt="Tujiimarishe SHG Logo" 
-                className="h-12 w-auto object-contain"
+                className="h-14 w-auto object-contain group-hover:scale-105 transition-transform"
+                style={{
+                  filter: 'drop-shadow(0 0 10px rgba(255, 159, 10, 0.3))',
+                }}
               />
-              <span className="text-2xl font-bold hidden md:block"
-                    style={{
-                      background: 'linear-gradient(135deg, #F59E0B 0%, #EC4899 50%, #9333EA 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text'
-                    }}>
+              <span 
+                className="text-2xl font-bold hidden md:block"
+                style={{
+                  background: 'linear-gradient(135deg, #FF9F0A 0%, #FF0A78 50%, #A855F7 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  textShadow: '0 0 30px rgba(255, 159, 10, 0.3)',
+                }}
+              >
                 Tujiimarishe SHG
               </span>
             </Link>
           </div>
 
-          <div className="hidden md:flex space-x-1">
+          <div className="hidden md:flex space-x-2">
             <Link
               href="/dashboard"
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                isActive('/dashboard')
-                  ? 'text-white shadow-lg'
-                  : 'text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-pink-50'
-              }`}
               style={isActive('/dashboard') ? {
-                background: 'linear-gradient(135deg, #F59E0B 0%, #EC4899 100%)'
-              } : {}}
+                background: 'linear-gradient(135deg, #FF9F0A 0%, #FF0A78 100%)',
+                boxShadow: '0 0 20px rgba(255, 159, 10, 0.4)',
+                border: '1px solid rgba(255, 159, 10, 0.3)',
+              } : {
+                background: 'rgba(255, 159, 10, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+              }}
+              className="px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105"
             >
-              Dashboard
+              <span style={{ color: isActive('/dashboard') ? '#fff' : '#FFB84D' }}>
+                Dashboard
+              </span>
             </Link>
             <Link
               href="/contributions"
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                isActive('/contributions')
-                  ? 'text-white shadow-lg'
-                  : 'text-gray-700 hover:bg-gradient-to-r hover:from-teal-50 hover:to-blue-50'
-              }`}
               style={isActive('/contributions') ? {
-                background: 'linear-gradient(135deg, #14B8A6 0%, #3B82F6 100%)'
-              } : {}}
+                background: 'linear-gradient(135deg, #00D9C0 0%, #0A84FF 100%)',
+                boxShadow: '0 0 20px rgba(0, 217, 192, 0.4)',
+                border: '1px solid rgba(0, 217, 192, 0.3)',
+              } : {
+                background: 'rgba(0, 217, 192, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+              }}
+              className="px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105"
             >
-              Contributions
+              <span style={{ color: isActive('/contributions') ? '#fff' : '#4DFFEA' }}>
+                Contributions
+              </span>
             </Link>
             <Link
               href="/loans"
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                isActive('/loans')
-                  ? 'text-white shadow-lg'
-                  : 'text-gray-700 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50'
-              }`}
               style={isActive('/loans') ? {
-                background: 'linear-gradient(135deg, #9333EA 0%, #EC4899 100%)'
-              } : {}}
+                background: 'linear-gradient(135deg, #A855F7 0%, #FF0A78 100%)',
+                boxShadow: '0 0 20px rgba(168, 85, 247, 0.4)',
+                border: '1px solid rgba(168, 85, 247, 0.3)',
+              } : {
+                background: 'rgba(168, 85, 247, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+              }}
+              className="px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105"
             >
-              Loans
+              <span style={{ color: isActive('/loans') ? '#fff' : '#C084FC' }}>
+                Loans
+              </span>
             </Link>
             <Link
               href="/members"
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                isActive('/members')
-                  ? 'text-white shadow-lg'
-                  : 'text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-teal-50'
-              }`}
               style={isActive('/members') ? {
-                background: 'linear-gradient(135deg, #3B82F6 0%, #14B8A6 100%)'
-              } : {}}
+                background: 'linear-gradient(135deg, #0A84FF 0%, #00D9C0 100%)',
+                boxShadow: '0 0 20px rgba(10, 132, 255, 0.4)',
+                border: '1px solid rgba(10, 132, 255, 0.3)',
+              } : {
+                background: 'rgba(10, 132, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+              }}
+              className="px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105"
             >
-              Members
+              <span style={{ color: isActive('/members') ? '#fff' : '#64B5F6' }}>
+                Members
+              </span>
             </Link>
             {profile?.role === 'treasurer' && (
               <Link
                 href="/admin"
-                className={`px-4 py-2 rounded-lg font-bold transition-all shadow-md ${
-                  isActive('/admin')
-                    ? 'text-white'
-                    : 'text-orange-600 border-2 border-orange-500 hover:text-white'
-                }`}
                 style={isActive('/admin') ? {
-                  background: 'linear-gradient(135deg, #F59E0B 0%, #DC2626 100%)'
-                } : {}}
+                  background: 'linear-gradient(135deg, #FF9F0A 0%, #FF453A 100%)',
+                  boxShadow: '0 0 30px rgba(255, 159, 10, 0.6)',
+                  border: '2px solid rgba(255, 159, 10, 0.5)',
+                } : {
+                  background: 'rgba(255, 159, 10, 0.1)',
+                  border: '2px solid #FF9F0A',
+                }}
+                className="px-4 py-2 rounded-lg font-bold transition-all hover:scale-105 animate-pulse"
               >
-                ⚡ Admin Panel
+                <span style={{ color: '#fff', textShadow: '0 0 10px rgba(255, 255, 255, 0.5)' }}>
+                  ⚡ Admin Panel
+                </span>
               </Link>
             )}
           </div>
@@ -123,15 +154,31 @@ export default function Navbar() {
           <div className="flex items-center space-x-4">
             {profile && (
               <div className="hidden md:block text-right">
-                <p className="text-sm font-medium text-gray-900">{profile.full_name}</p>
-                <p className="text-xs text-gray-500 capitalize">{profile.role}</p>
+                <p className="text-sm font-semibold" style={{ color: '#F8F9FA' }}>
+                  {profile.full_name}
+                </p>
+                <p className="text-xs capitalize" style={{ 
+                  color: '#FFB84D',
+                  textShadow: '0 0 10px rgba(255, 184, 77, 0.3)',
+                }}>
+                  {profile.role}
+                </p>
               </div>
             )}
             <button
               onClick={handleLogout}
-              className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 
-                       border border-red-600 hover:border-red-700 rounded-lg 
-                       transition-all hover:bg-red-50"
+              style={{
+                background: 'rgba(255, 69, 58, 0.1)',
+                border: '2px solid #FF453A',
+                color: '#FF8A80',
+                padding: '0.5rem 1rem',
+                borderRadius: '0.75rem',
+                fontWeight: '600',
+                fontSize: '0.875rem',
+                transition: 'all 300ms',
+                backdropFilter: 'blur(10px)',
+              }}
+              className="hover:bg-gradient-to-r hover:from-red-500 hover:to-pink-500 hover:text-white hover:scale-105"
             >
               Logout
             </button>
@@ -140,57 +187,84 @@ export default function Navbar() {
       </div>
 
       {/* Mobile menu */}
-      <div className="md:hidden border-t border-gray-200 px-4 py-3 space-y-1">
+      <div 
+        className="md:hidden px-4 py-3 space-y-2"
+        style={{
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          background: 'rgba(10, 10, 15, 0.6)',
+        }}
+      >
         <Link
           href="/dashboard"
-          className={`block px-4 py-2 rounded-lg font-medium transition-all ${
-            isActive('/dashboard')
-              ? 'bg-[#2E7D32] text-white'
-              : 'text-gray-700 hover:bg-gray-100'
-          }`}
+          style={isActive('/dashboard') ? {
+            background: 'linear-gradient(135deg, #FF9F0A 0%, #FF0A78 100%)',
+            color: '#fff',
+          } : {
+            background: 'rgba(255, 159, 10, 0.05)',
+            color: '#FFB84D',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+          }}
+          className="block px-4 py-2 rounded-lg font-semibold transition-all"
         >
           Dashboard
         </Link>
         <Link
           href="/contributions"
-          className={`block px-4 py-2 rounded-lg font-medium transition-all ${
-            isActive('/contributions')
-              ? 'bg-[#2E7D32] text-white'
-              : 'text-gray-700 hover:bg-gray-100'
-          }`}
+          style={isActive('/contributions') ? {
+            background: 'linear-gradient(135deg, #00D9C0 0%, #0A84FF 100%)',
+            color: '#fff',
+          } : {
+            background: 'rgba(0, 217, 192, 0.05)',
+            color: '#4DFFEA',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+          }}
+          className="block px-4 py-2 rounded-lg font-semibold transition-all"
         >
           Contributions
         </Link>
         <Link
           href="/loans"
-          className={`block px-4 py-2 rounded-lg font-medium transition-all ${
-            isActive('/loans')
-              ? 'bg-[#2E7D32] text-white'
-              : 'text-gray-700 hover:bg-gray-100'
-          }`}
+          style={isActive('/loans') ? {
+            background: 'linear-gradient(135deg, #A855F7 0%, #FF0A78 100%)',
+            color: '#fff',
+          } : {
+            background: 'rgba(168, 85, 247, 0.05)',
+            color: '#C084FC',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+          }}
+          className="block px-4 py-2 rounded-lg font-semibold transition-all"
         >
           Loans
         </Link>
         <Link
           href="/members"
-          className={`block px-4 py-2 rounded-lg font-medium transition-all ${
-            isActive('/members')
-              ? 'bg-[#2E7D32] text-white'
-              : 'text-gray-700 hover:bg-gray-100'
-          }`}
+          style={isActive('/members') ? {
+            background: 'linear-gradient(135deg, #0A84FF 0%, #00D9C0 100%)',
+            color: '#fff',
+          } : {
+            background: 'rgba(10, 132, 255, 0.05)',
+            color: '#64B5F6',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+          }}
+          className="block px-4 py-2 rounded-lg font-semibold transition-all"
         >
           Members
         </Link>
         {profile?.role === 'treasurer' && (
           <Link
             href="/admin"
-            className={`block px-4 py-2 rounded-lg font-medium transition-all ${
-              isActive('/admin')
-                ? 'bg-[#FFD700] text-gray-900'
-                : 'text-[#FFD700] border border-[#FFD700] hover:bg-[#FFD700] hover:text-gray-900'
-            }`}
+            style={isActive('/admin') ? {
+              background: 'linear-gradient(135deg, #FF9F0A 0%, #FF453A 100%)',
+              color: '#fff',
+              boxShadow: '0 0 20px rgba(255, 159, 10, 0.4)',
+            } : {
+              background: 'rgba(255, 159, 10, 0.1)',
+              color: '#FF9F0A',
+              border: '1px solid #FF9F0A',
+            }}
+            className="block px-4 py-2 rounded-lg font-bold transition-all"
           >
-            Admin Panel
+            ⚡ Admin Panel
           </Link>
         )}
       </div>
