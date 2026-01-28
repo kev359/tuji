@@ -74,10 +74,8 @@ export default function ContributionsPage() {
 
       if (error) throw error;
 
-      // Refresh contributions
       await fetchContributions(user.id);
       
-      // Reset form
       setFormData({
         month: '',
         year: new Date().getFullYear(),
@@ -103,100 +101,158 @@ export default function ContributionsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#2E7D32]"></div>
-          <p className="mt-4 text-gray-600">Loading contributions...</p>
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'transparent',
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: '60px',
+            height: '60px',
+            border: '3px solid rgba(0, 217, 192, 0.2)',
+            borderTop: '3px solid #00D9C0',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto',
+          }}></div>
+          <p style={{ color: '#4DFFEA', marginTop: '16px', fontWeight: '500' }}>Loading contributions...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div style={{ minHeight: '100vh', background: 'transparent', position: 'relative', zIndex: 2 }}>
       <Navbar />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-8">
+      <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">My Contributions</h1>
-            <p className="text-gray-600 mt-2">Track your monthly contributions</p>
+            <h1 style={{
+              fontSize: '2.25rem',
+              fontWeight: '800',
+              background: 'linear-gradient(135deg, #00D9C0 0%, #0A84FF 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>
+              My Contributions
+            </h1>
+            <p style={{ color: '#ADB5BD', marginTop: '8px' }}>Track your monthly contributions</p>
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="btn-primary"
+            style={{
+              background: 'linear-gradient(135deg, #FF9F0A 0%, #FF0A78 100%)',
+              color: 'white',
+              padding: '14px 28px',
+              borderRadius: '12px',
+              fontWeight: '600',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 8px 24px rgba(255, 159, 10, 0.3)',
+              transition: 'all 300ms',
+            }}
           >
-            Record Contribution
+            💰 Record Contribution
           </button>
         </div>
 
         {/* Contributions Table */}
-        <div className="card overflow-hidden">
+        <div style={{
+          background: 'rgba(30, 30, 35, 0.7)',
+          backdropFilter: 'blur(20px)',
+          borderRadius: '16px',
+          padding: '24px',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+          marginBottom: '24px',
+        }}>
           {contributions.length === 0 ? (
-            <div className="text-center py-12">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No contributions yet</h3>
-              <p className="mt-1 text-sm text-gray-500">Get started by recording your first contribution.</p>
-              <div className="mt-6">
-                <button onClick={() => setShowModal(true)} className="btn-primary">
-                  Record First Contribution
-                </button>
+            <div style={{ textAlign: 'center', padding: '48px 0' }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                margin: '0 auto 16px',
+                background: 'rgba(0, 217, 192, 0.1)',
+                borderRadius: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <svg style={{ width: '32px', height: '32px', color: '#00D9C0' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
               </div>
+              <h3 style={{ color: '#F8F9FA', fontWeight: '600', marginBottom: '8px' }}>No contributions yet</h3>
+              <p style={{ color: '#ADB5BD', marginBottom: '24px' }}>Get started by recording your first contribution.</p>
+              <button 
+                onClick={() => setShowModal(true)} 
+                style={{
+                  background: 'linear-gradient(135deg, #FF9F0A 0%, #FF0A78 100%)',
+                  color: 'white',
+                  padding: '12px 24px',
+                  borderRadius: '10px',
+                  fontWeight: '600',
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 8px 24px rgba(255, 159, 10, 0.3)',
+                }}
+              >
+                Record First Contribution
+              </button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Period
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Table Banking
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Bank Savings
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Confirmed By
-                    </th>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase' }}>Period</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase' }}>Table Banking</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase' }}>Bank Savings</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase' }}>Total</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase' }}>Status</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase' }}>Confirmed By</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody>
                   {contributions.map((contribution) => {
                     const total = parseFloat(contribution.table_banking_amount || 0) + 
                                 parseFloat(contribution.bank_savings_amount || 0);
                     
                     return (
-                      <tr key={contribution.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <tr key={contribution.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                        <td style={{ padding: '16px', color: '#F8F9FA', fontWeight: '500' }}>
                           {contribution.month} {contribution.year}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td style={{ padding: '16px', color: '#00D9C0' }}>
                           KES {parseFloat(contribution.table_banking_amount || 0).toLocaleString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td style={{ padding: '16px', color: '#0A84FF' }}>
                           KES {parseFloat(contribution.bank_savings_amount || 0).toLocaleString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                        <td style={{ padding: '16px', color: '#FF9F0A', fontWeight: '600' }}>
                           KES {total.toLocaleString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`badge ${
-                            contribution.status === 'confirmed' ? 'badge-confirmed' : 'badge-pending'
-                          }`}>
+                        <td style={{ padding: '16px' }}>
+                          <span style={{
+                            padding: '4px 12px',
+                            borderRadius: '20px',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            background: contribution.status === 'confirmed' 
+                              ? 'rgba(50, 215, 75, 0.2)' 
+                              : 'rgba(255, 159, 10, 0.2)',
+                            color: contribution.status === 'confirmed' ? '#32D74B' : '#FF9F0A',
+                            border: `1px solid ${contribution.status === 'confirmed' ? 'rgba(50, 215, 75, 0.3)' : 'rgba(255, 159, 10, 0.3)'}`,
+                          }}>
                             {contribution.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td style={{ padding: '16px', color: '#ADB5BD' }}>
                           {contribution.confirmed_by_profile?.full_name || '-'}
                         </td>
                       </tr>
@@ -209,28 +265,53 @@ export default function ContributionsPage() {
         </div>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-          <div className="card bg-gradient-to-br from-green-50 to-green-100">
-            <p className="text-sm font-medium text-green-700 mb-1">Total Contributed</p>
-            <p className="text-2xl font-bold text-green-900">
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: '20px',
+        }}>
+          <div style={{
+            background: 'rgba(30, 30, 35, 0.7)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: '16px',
+            padding: '24px',
+            border: '1px solid rgba(50, 215, 75, 0.3)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(50, 215, 75, 0.1)',
+          }}>
+            <p style={{ fontSize: '0.875rem', fontWeight: '600', color: '#32D74B', marginBottom: '8px', textTransform: 'uppercase' }}>Total Contributed</p>
+            <p style={{ fontSize: '1.75rem', fontWeight: '700', color: '#F8F9FA' }}>
               KES {contributions.reduce((sum, c) => 
                 sum + parseFloat(c.table_banking_amount || 0) + parseFloat(c.bank_savings_amount || 0), 
                 0
               ).toLocaleString()}
             </p>
           </div>
-          <div className="card bg-gradient-to-br from-blue-50 to-blue-100">
-            <p className="text-sm font-medium text-blue-700 mb-1">Confirmed</p>
-            <p className="text-2xl font-bold text-blue-900">
+          <div style={{
+            background: 'rgba(30, 30, 35, 0.7)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: '16px',
+            padding: '24px',
+            border: '1px solid rgba(0, 217, 192, 0.3)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 217, 192, 0.1)',
+          }}>
+            <p style={{ fontSize: '0.875rem', fontWeight: '600', color: '#00D9C0', marginBottom: '8px', textTransform: 'uppercase' }}>Confirmed</p>
+            <p style={{ fontSize: '1.75rem', fontWeight: '700', color: '#F8F9FA' }}>
               KES {contributions.filter(c => c.status === 'confirmed').reduce((sum, c) => 
                 sum + parseFloat(c.table_banking_amount || 0) + parseFloat(c.bank_savings_amount || 0), 
                 0
               ).toLocaleString()}
             </p>
           </div>
-          <div className="card bg-gradient-to-br from-yellow-50 to-yellow-100">
-            <p className="text-sm font-medium text-yellow-700 mb-1">Pending</p>
-            <p className="text-2xl font-bold text-yellow-900">
+          <div style={{
+            background: 'rgba(30, 30, 35, 0.7)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: '16px',
+            padding: '24px',
+            border: '1px solid rgba(255, 159, 10, 0.3)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 159, 10, 0.1)',
+          }}>
+            <p style={{ fontSize: '0.875rem', fontWeight: '600', color: '#FF9F0A', marginBottom: '8px', textTransform: 'uppercase' }}>Pending</p>
+            <p style={{ fontSize: '1.75rem', fontWeight: '700', color: '#F8F9FA' }}>
               KES {contributions.filter(c => c.status === 'pending').reduce((sum, c) => 
                 sum + parseFloat(c.table_banking_amount || 0) + parseFloat(c.bank_savings_amount || 0), 
                 0
@@ -242,30 +323,67 @@ export default function ContributionsPage() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Record Contribution</h2>
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px',
+          zIndex: 50,
+        }}>
+          <div style={{
+            background: 'rgba(30, 30, 35, 0.95)',
+            borderRadius: '20px',
+            boxShadow: '0 24px 48px rgba(0, 0, 0, 0.6)',
+            maxWidth: '480px',
+            width: '100%',
+            padding: '32px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h2 style={{ 
+                fontSize: '1.5rem', 
+                fontWeight: '700', 
+                color: '#F8F9FA',
+              }}>Record Contribution</h2>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                style={{
+                  background: 'rgba(255, 69, 58, 0.1)',
+                  border: '1px solid rgba(255, 69, 58, 0.3)',
+                  borderRadius: '8px',
+                  padding: '8px',
+                  cursor: 'pointer',
+                  color: '#FF453A',
+                }}
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#ADB5BD', marginBottom: '8px' }}>
                   Month
                 </label>
                 <select
                   value={formData.month}
                   onChange={(e) => setFormData({ ...formData, month: e.target.value })}
-                  className="input-field"
                   required
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    background: 'rgba(15, 15, 20, 0.8)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '10px',
+                    color: '#F8F9FA',
+                    fontSize: '1rem',
+                  }}
                 >
                   <option value="">Select Month</option>
                   {months.map(month => (
@@ -275,14 +393,22 @@ export default function ContributionsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#ADB5BD', marginBottom: '8px' }}>
                   Year
                 </label>
                 <select
                   value={formData.year}
                   onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                  className="input-field"
                   required
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    background: 'rgba(15, 15, 20, 0.8)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '10px',
+                    color: '#F8F9FA',
+                    fontSize: '1rem',
+                  }}
                 >
                   {years.map(year => (
                     <option key={year} value={year}>{year}</option>
@@ -291,55 +417,96 @@ export default function ContributionsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#ADB5BD', marginBottom: '8px' }}>
                   Table Banking Amount (KES)
                 </label>
                 <input
                   type="number"
                   value={formData.tableBankingAmount}
                   onChange={(e) => setFormData({ ...formData, tableBankingAmount: e.target.value })}
-                  className="input-field"
+                  required
                   min="0"
                   step="0.01"
-                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    background: 'rgba(15, 15, 20, 0.8)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '10px',
+                    color: '#F8F9FA',
+                    fontSize: '1rem',
+                  }}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#ADB5BD', marginBottom: '8px' }}>
                   Bank Savings Amount (KES)
                 </label>
                 <input
                   type="number"
                   value={formData.bankSavingsAmount}
                   onChange={(e) => setFormData({ ...formData, bankSavingsAmount: e.target.value })}
-                  className="input-field"
+                  required
                   min="0"
                   step="0.01"
-                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    background: 'rgba(15, 15, 20, 0.8)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '10px',
+                    color: '#F8F9FA',
+                    fontSize: '1rem',
+                  }}
                 />
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-600">Total Amount:</p>
-                <p className="text-2xl font-bold text-[#2E7D32]">
+              <div style={{
+                background: 'rgba(255, 159, 10, 0.1)',
+                padding: '16px',
+                borderRadius: '12px',
+                border: '1px solid rgba(255, 159, 10, 0.2)',
+              }}>
+                <p style={{ fontSize: '0.875rem', color: '#ADB5BD' }}>Total Amount:</p>
+                <p style={{ fontSize: '1.75rem', fontWeight: '700', color: '#FF9F0A' }}>
                   KES {(parseFloat(formData.tableBankingAmount || 0) + 
                        parseFloat(formData.bankSavingsAmount || 0)).toLocaleString()}
                 </p>
               </div>
 
-              <div className="flex space-x-3 pt-4">
+              <div style={{ display: 'flex', gap: '12px', paddingTop: '8px' }}>
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition-all"
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '10px',
+                    background: 'transparent',
+                    color: '#ADB5BD',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                  }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 btn-primary disabled:opacity-50"
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    background: 'linear-gradient(135deg, #00D9C0 0%, #0A84FF 100%)',
+                    border: 'none',
+                    borderRadius: '10px',
+                    color: 'white',
+                    fontWeight: '600',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    opacity: loading ? 0.6 : 1,
+                    boxShadow: '0 8px 24px rgba(0, 217, 192, 0.3)',
+                  }}
                 >
                   {loading ? 'Submitting...' : 'Submit Contribution'}
                 </button>

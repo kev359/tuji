@@ -234,10 +234,24 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#2E7D32]"></div>
-          <p className="mt-4 text-gray-600">Loading admin panel...</p>
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'transparent',
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: '60px',
+            height: '60px',
+            border: '3px solid rgba(255, 159, 10, 0.2)',
+            borderTop: '3px solid #FF9F0A',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto',
+          }}></div>
+          <p style={{ color: '#FFB84D', marginTop: '16px', fontWeight: '500' }}>Loading admin panel...</p>
         </div>
       </div>
     );
@@ -246,104 +260,136 @@ export default function AdminPage() {
   const pendingCount = pendingContributions.length + pendingLoans.length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div style={{ minHeight: '100vh', background: 'transparent', position: 'relative', zIndex: 2 }}>
       <Navbar />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
+      <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
+        <div style={{ marginBottom: '32px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Treasurer Admin Panel</h1>
-              <p className="text-gray-600 mt-2">Manage contributions, loans, and payments</p>
+              <h1 style={{
+                fontSize: '2.25rem',
+                fontWeight: '800',
+                background: 'linear-gradient(135deg, #FF9F0A 0%, #FF453A 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}>
+                Treasurer Panel
+              </h1>
+              <p style={{ color: '#ADB5BD', marginTop: '8px' }}>Manage contributions, loans, and payments</p>
             </div>
-            <div className="bg-gradient-to-r from-[#FFD700] to-[#FFA000] text-gray-900 px-6 py-3 rounded-lg font-bold shadow-lg">
-              <div className="text-center">
-                <p className="text-sm">Pending Actions</p>
-                <p className="text-3xl">{pendingCount}</p>
-              </div>
+            <div style={{
+              background: 'linear-gradient(135deg, #FFD700 0%, #FFA000 100%)',
+              color: '#000',
+              padding: '12px 24px',
+              borderRadius: '12px',
+              fontWeight: '700',
+              boxShadow: '0 8px 20px rgba(255, 160, 0, 0.3)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}>
+              <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', opacity: 0.8 }}>Pending Actions</span>
+              <span style={{ fontSize: '1.5rem', lineHeight: '1' }}>{pendingCount}</span>
             </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="card mb-6">
-          <div className="flex space-x-2 border-b border-gray-200">
+        <div style={{
+          background: 'rgba(30, 30, 35, 0.7)',
+          backdropFilter: 'blur(20px)',
+          borderRadius: '16px',
+          marginBottom: '24px',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          display: 'flex',
+          overflowX: 'auto',
+          padding: '8px',
+        }}>
+          {[
+            { id: 'contributions', label: `Pending Contributions (${pendingContributions.length})`, color: '#32D74B' },
+            { id: 'loans', label: `Pending Loans (${pendingLoans.length})`, color: '#A855F7' },
+            { id: 'payments', label: `Record Payment`, color: '#0A84FF' }
+          ].map((tab) => (
             <button
-              onClick={() => setActiveTab('contributions')}
-              className={`px-6 py-3 font-medium transition-all ${
-                activeTab === 'contributions'
-                  ? 'text-[#2E7D32] border-b-2 border-[#2E7D32]'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '10px',
+                fontWeight: '600',
+                fontSize: '0.875rem',
+                background: activeTab === tab.id ? `${tab.color}22` : 'transparent',
+                color: activeTab === tab.id ? tab.color : '#ADB5BD',
+                border: activeTab === tab.id ? `1px solid ${tab.color}44` : '1px solid transparent',
+                cursor: 'pointer',
+                transition: 'all 200ms',
+                whiteSpace: 'nowrap',
+                flex: 1,
+              }}
             >
-              Pending Contributions ({pendingContributions.length})
+              {tab.label}
             </button>
-            <button
-              onClick={() => setActiveTab('loans')}
-              className={`px-6 py-3 font-medium transition-all ${
-                activeTab === 'loans'
-                  ? 'text-[#2E7D32] border-b-2 border-[#2E7D32]'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Pending Loans ({pendingLoans.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('payments')}
-              className={`px-6 py-3 font-medium transition-all ${
-                activeTab === 'payments'
-                  ? 'text-[#2E7D32] border-b-2 border-[#2E7D32]'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Record Payment ({activeLoans.length})
-            </button>
-          </div>
+          ))}
         </div>
 
         {/* Pending Contributions Tab */}
         {activeTab === 'contributions' && (
-          <div className="card overflow-hidden">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Pending Contributions</h2>
+          <div style={{
+            background: 'rgba(30, 30, 35, 0.7)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: '16px',
+            padding: '24px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+          }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#F8F9FA', marginBottom: '16px' }}>Pending Contributions</h2>
             {pendingContributions.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
+              <div style={{ textAlign: 'center', padding: '48px 0', color: '#ADB5BD' }}>
                 No pending contributions
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Member</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Period</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Table Banking</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bank Savings</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                      <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.75rem', textTransform: 'uppercase' }}>Member</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.75rem', textTransform: 'uppercase' }}>Period</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.75rem', textTransform: 'uppercase' }}>Amounts</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.75rem', textTransform: 'uppercase' }}>Date</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.75rem', textTransform: 'uppercase' }}>Action</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody>
                     {pendingContributions.map((contrib) => (
-                      <tr key={contrib.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <tr key={contrib.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                        <td style={{ padding: '16px', color: '#F8F9FA', fontWeight: '500' }}>
                           {contrib.member?.full_name || contrib.member?.email || 'Unknown'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td style={{ padding: '16px', color: '#ADB5BD' }}>
                           {contrib.month} {contrib.year}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          KES {parseFloat(contrib.table_banking_amount || 0).toLocaleString()}
+                        <td style={{ padding: '16px' }}>
+                          <div style={{ color: '#00D9C0' }}>Wait: KES {parseFloat(contrib.table_banking_amount || 0).toLocaleString()}</div>
+                          <div style={{ color: '#0A84FF' }}>Bank: KES {parseFloat(contrib.bank_savings_amount || 0).toLocaleString()}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          KES {parseFloat(contrib.bank_savings_amount || 0).toLocaleString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td style={{ padding: '16px', color: '#ADB5BD', fontSize: '0.875rem' }}>
                           {new Date(contrib.created_at).toLocaleDateString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td style={{ padding: '16px' }}>
                           <button
                             onClick={() => confirmContribution(contrib.id)}
-                            className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-all"
+                            style={{
+                              background: 'rgba(50, 215, 75, 0.2)',
+                              color: '#32D74B',
+                              border: '1px solid rgba(50, 215, 75, 0.4)',
+                              padding: '8px 16px',
+                              borderRadius: '8px',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              transition: 'all 200ms',
+                            }}
                           >
                             Confirm
                           </button>
@@ -359,60 +405,78 @@ export default function AdminPage() {
 
         {/* Pending Loans Tab */}
         {activeTab === 'loans' && (
-          <div className="card overflow-hidden">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Pending Loan Requests</h2>
+          <div style={{
+            background: 'rgba(30, 30, 35, 0.7)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: '16px',
+            padding: '24px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+          }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#F8F9FA', marginBottom: '16px' }}>Pending Loan Requests</h2>
             {pendingLoans.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
+              <div style={{ textAlign: 'center', padding: '48px 0', color: '#ADB5BD' }}>
                 No pending loan requests
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Member</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Interest</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Purpose</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                      <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.75rem', textTransform: 'uppercase' }}>Member</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.75rem', textTransform: 'uppercase' }}>Details</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.75rem', textTransform: 'uppercase' }}>Purpose</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.75rem', textTransform: 'uppercase' }}>Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody>
                     {pendingLoans.map((loan) => (
-                      <tr key={loan.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <tr key={loan.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                        <td style={{ padding: '16px', color: '#F8F9FA', fontWeight: '500' }}>
                           {loan.member?.full_name || loan.member?.email || 'Unknown'}
+                          <div style={{ fontSize: '0.75rem', color: '#ADB5BD', marginTop: '4px' }}>
+                            {new Date(loan.request_date).toLocaleDateString()}
+                          </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          KES {parseFloat(loan.amount || 0).toLocaleString()}
+                        <td style={{ padding: '16px' }}>
+                          <div style={{ color: '#A855F7', fontWeight: '600' }}>KES {parseFloat(loan.amount || 0).toLocaleString()}</div>
+                          <div style={{ color: '#ADB5BD', fontSize: '0.75rem' }}>+ KES {parseFloat(loan.interest_amount || 0).toLocaleString()} int.</div>
+                          <div style={{ color: '#F8F9FA', foneWeight: '700', marginTop: '4px' }}>= KES {parseFloat(loan.total_amount || 0).toLocaleString()}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          KES {parseFloat(loan.interest_amount || 0).toLocaleString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                          KES {parseFloat(loan.total_amount || 0).toLocaleString()}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate" title={loan.purpose}>
+                        <td style={{ padding: '16px', color: '#ADB5BD', maxWidth: '200px' }}>
                           {loan.purpose}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(loan.request_date).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap space-x-2">
-                          <button
-                            onClick={() => approveLoan(loan.id)}
-                            className="bg-green-600 text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-green-700 transition-all"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => rejectLoan(loan.id)}
-                            className="bg-red-600 text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-red-700 transition-all"
-                          >
-                            Reject
-                          </button>
+                        <td style={{ padding: '16px' }}>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                              onClick={() => approveLoan(loan.id)}
+                              style={{
+                                background: 'rgba(50, 215, 75, 0.2)',
+                                color: '#32D74B',
+                                border: '1px solid rgba(50, 215, 75, 0.4)',
+                                padding: '8px 12px',
+                                borderRadius: '8px',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => rejectLoan(loan.id)}
+                              style={{
+                                background: 'rgba(255, 69, 58, 0.2)',
+                                color: '#FF453A',
+                                border: '1px solid rgba(255, 69, 58, 0.4)',
+                                padding: '8px 12px',
+                                borderRadius: '8px',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              Reject
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -425,49 +489,61 @@ export default function AdminPage() {
 
         {/* Record Payment Tab */}
         {activeTab === 'payments' && (
-          <div className="card overflow-hidden">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Active Loans - Record Payment</h2>
+          <div style={{
+            background: 'rgba(30, 30, 35, 0.7)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: '16px',
+            padding: '24px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+          }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#F8F9FA', marginBottom: '16px' }}>Active Loans - Record Payment</h2>
             {activeLoans.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
+              <div style={{ textAlign: 'center', padding: '48px 0', color: '#ADB5BD' }}>
                 No active loans
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Member</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Loan Amount</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Due</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Paid</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Balance</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                      <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.75rem', textTransform: 'uppercase' }}>Member</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.75rem', textTransform: 'uppercase' }}>Loan Amount</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.75rem', textTransform: 'uppercase' }}>Paid</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.75rem', textTransform: 'uppercase' }}>Balance</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.75rem', textTransform: 'uppercase' }}>Action</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody>
                     {activeLoans.map((loan) => (
-                      <tr key={loan.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <tr key={loan.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                        <td style={{ padding: '16px', color: '#F8F9FA', fontWeight: '500' }}>
                           {loan.member?.full_name || loan.member?.email || 'Unknown'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          KES {parseFloat(loan.amount || 0).toLocaleString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td style={{ padding: '16px', color: '#F8F9FA' }}>
                           KES {parseFloat(loan.total_amount || 0).toLocaleString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td style={{ padding: '16px', color: '#32D74B' }}>
                           KES {parseFloat(loan.amount_paid || 0).toLocaleString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">
+                        <td style={{ padding: '16px', color: '#FF453A', fontWeight: '700' }}>
                           KES {parseFloat(loan.balance || 0).toLocaleString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td style={{ padding: '16px' }}>
                           <button
                             onClick={() => openPaymentModal(loan)}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-all"
+                            style={{
+                              background: 'rgba(10, 132, 255, 0.2)',
+                              color: '#0A84FF',
+                              border: '1px solid rgba(10, 132, 255, 0.4)',
+                              padding: '8px 16px',
+                              borderRadius: '8px',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              transition: 'all 200ms',
+                            }}
                           >
-                            Record Payment
+                            Pay
                           </button>
                         </td>
                       </tr>
@@ -482,78 +558,147 @@ export default function AdminPage() {
 
       {/* Payment Modal */}
       {showPaymentModal && selectedLoan && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Record Loan Payment</h2>
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px',
+          zIndex: 50,
+        }}>
+          <div style={{
+            background: 'rgba(30, 30, 35, 0.95)',
+            borderRadius: '20px',
+            boxShadow: '0 24px 48px rgba(0, 0, 0, 0.6)',
+            maxWidth: '480px',
+            width: '100%',
+            padding: '32px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h2 style={{ 
+                fontSize: '1.5rem', 
+                fontWeight: '700', 
+                color: '#F8F9FA',
+              }}>Record Payment</h2>
               <button
                 onClick={() => setShowPaymentModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                style={{
+                  background: 'rgba(255, 69, 58, 0.1)',
+                  border: '1px solid rgba(255, 69, 58, 0.3)',
+                  borderRadius: '8px',
+                  padding: '8px',
+                  cursor: 'pointer',
+                  color: '#FF453A',
+                }}
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            <div className="bg-gray-50 p-4 rounded-lg mb-6">
-              <p className="text-sm text-gray-600 mb-1">
-                <strong>Member:</strong> {selectedLoan.member?.full_name || 'Unknown'}
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.05)',
+              padding: '16px',
+              borderRadius: '12px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              marginBottom: '20px'
+            }}>
+              <p style={{ fontSize: '0.875rem', color: '#ADB5BD', marginBottom: '4px' }}>
+                <strong style={{ color: '#F8F9FA' }}>Member:</strong> {selectedLoan.member?.full_name || 'Unknown'}
               </p>
-              <p className="text-sm text-gray-600">
-                <strong>Outstanding Balance:</strong> 
-                <span className="text-red-600 font-bold ml-2">
+              <p style={{ fontSize: '0.875rem', color: '#ADB5BD' }}>
+                <strong style={{ color: '#F8F9FA' }}>Outstanding Balance:</strong> 
+                <span style={{ color: '#FF453A', fontWeight: '700', marginLeft: '8px' }}>
                   KES {parseFloat(selectedLoan.balance || 0).toLocaleString()}
                 </span>
               </p>
             </div>
 
-            <form onSubmit={handlePaymentSubmit} className="space-y-4">
+            <form onSubmit={handlePaymentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#ADB5BD', marginBottom: '8px' }}>
                   Payment Amount (KES)
                 </label>
                 <input
                   type="number"
                   value={paymentData.amount}
                   onChange={(e) => setPaymentData({ ...paymentData, amount: e.target.value })}
-                  className="input-field"
                   placeholder="Enter payment amount"
                   min="0.01"
                   max={selectedLoan.balance}
                   step="0.01"
                   required
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    background: 'rgba(15, 15, 20, 0.8)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '10px',
+                    color: '#F8F9FA',
+                    fontSize: '1rem',
+                  }}
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  Maximum: KES {parseFloat(selectedLoan.balance || 0).toLocaleString()}
-                </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#ADB5BD', marginBottom: '8px' }}>
                   Notes (Optional)
                 </label>
                 <textarea
                   value={paymentData.notes}
                   onChange={(e) => setPaymentData({ ...paymentData, notes: e.target.value })}
-                  className="input-field"
-                  placeholder="Add any notes about this payment..."
-                  rows="3"
+                  placeholder="Add any notes..."
+                  rows="2"
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    background: 'rgba(15, 15, 20, 0.8)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '10px',
+                    color: '#F8F9FA',
+                    fontSize: '1rem',
+                    resize: 'none',
+                  }}
                 ></textarea>
               </div>
 
-              <div className="flex space-x-3 pt-4">
+              <div style={{ display: 'flex', gap: '12px', paddingTop: '8px' }}>
                 <button
                   type="button"
                   onClick={() => setShowPaymentModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition-all"
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '10px',
+                    background: 'transparent',
+                    color: '#ADB5BD',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                  }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 btn-primary disabled:opacity-50"
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    background: 'linear-gradient(135deg, #FF9F0A 0%, #FF453A 100%)',
+                    border: 'none',
+                    borderRadius: '10px',
+                    color: 'white',
+                    fontWeight: '600',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    opacity: loading ? 0.6 : 1,
+                    boxShadow: '0 8px 24px rgba(255, 160, 0, 0.3)',
+                  }}
                 >
                   {loading ? 'Recording...' : 'Record Payment'}
                 </button>
