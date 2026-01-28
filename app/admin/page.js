@@ -15,12 +15,22 @@ export default function AdminPage() {
   const [pendingContributions, setPendingContributions] = useState([]);
   const [pendingLoans, setPendingLoans] = useState([]);
   const [activeLoans, setActiveLoans] = useState([]);
+  const [allMembers, setAllMembers] = useState([]);
   
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedLoan, setSelectedLoan] = useState(null);
   const [paymentData, setPaymentData] = useState({
     amount: '',
     notes: '',
+  });
+
+  // New Contribution State
+  const [newContribution, setNewContribution] = useState({
+    member_id: '',
+    month: '',
+    year: new Date().getFullYear(),
+    table_banking: 1000,
+    bank_savings: 1000,
   });
 
   useEffect(() => {
@@ -42,7 +52,7 @@ export default function AdminPage() {
       .eq('id', user.id)
       .single();
 
-    if (profileData?.role !== 'treasurer') {
+    if (profileData?.role !== 'treasurer' && profileData?.role !== 'admin') {
       alert('Access denied. This page is only for treasurers.');
       router.push('/dashboard');
       return;
@@ -59,7 +69,16 @@ export default function AdminPage() {
       loadPendingContributions(),
       loadPendingLoans(),
       loadActiveLoans(),
+      loadMembers(),
     ]);
+  };
+
+  const loadMembers = async () => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, full_name, email')
+      .order('full_name');
+    setAllMembers(data || []);
   };
 
   const loadPendingContributions = async () => {
@@ -232,6 +251,51 @@ export default function AdminPage() {
     }
   };
 
+  const handleNewContributionSubmit = async (e) => {
+    e.preventDefault();
+    if (!newContribution.member_id || !newContribution.month) {
+      alert('Please select a member and a month');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('contributions')
+        .insert([{
+          member_id: newContribution.member_id,
+          month: newContribution.month,
+          year: parseInt(newContribution.year),
+          table_banking_amount: parseFloat(newContribution.table_banking),
+          bank_savings_amount: parseFloat(newContribution.bank_savings),
+          status: 'confirmed', // Auto-confirm since admin is adding it
+          confirmed_by: user.id,
+          confirmed_at: new Date().toISOString(),
+        }]);
+
+      if (error) throw error;
+      
+      alert('Contribution recorded successfully!');
+      setNewContribution({
+        member_id: '',
+        month: '',
+        year: new Date().getFullYear(),
+        table_banking: 1000,
+        bank_savings: 1000,
+      });
+      await loadAllData();
+    } catch (error) {
+      alert('Error: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
   if (loading) {
     return (
       <div style={{
@@ -306,11 +370,13 @@ export default function AdminPage() {
           display: 'flex',
           overflowX: 'auto',
           padding: '8px',
+          gap: '8px',
         }}>
           {[
-            { id: 'contributions', label: `Pending Contributions (${pendingContributions.length})`, color: '#32D74B' },
+            { id: 'new_contribution', label: `+ Record Contribution`, color: '#00D9C0' },
+            { id: 'contributions', label: `Pending Contribs (${pendingContributions.length})`, color: '#32D74B' },
             { id: 'loans', label: `Pending Loans (${pendingLoans.length})`, color: '#A855F7' },
-            { id: 'payments', label: `Record Payment`, color: '#0A84FF' }
+            { id: 'payments', label: `Record Loan Payment`, color: '#0A84FF' }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -326,13 +392,185 @@ export default function AdminPage() {
                 cursor: 'pointer',
                 transition: 'all 200ms',
                 whiteSpace: 'nowrap',
-                flex: 1,
               }}
             >
               {tab.label}
             </button>
           ))}
         </div>
+
+        {/* Record New Contribution Tab */}
+        {activeTab === 'new_contribution' && (
+          <div style={{
+            background: 'rgba(30, 30, 35, 0.7)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: '16px',
+            padding: '24px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+            maxWidth: '600px',
+            margin: '0 auto',
+          }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#F8F9FA', marginBottom: '24px', textAlign: 'center' }}>
+              Record Member Contribution
+            </h2>
+            <form onSubmit={handleNewContributionSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {/* Member Selection */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#ADB5BD', marginBottom: '8px' }}>
+                  Select Member
+                </label>
+                <select
+                  value={newContribution.member_id}
+                  onChange={(e) => setNewContribution({ ...newContribution, member_id: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    borderRadius: '10px',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    background: 'rgba(15, 15, 20, 0.8)',
+                    color: '#F8F9FA',
+                    outline: 'none',
+                    cursor: 'pointer',
+                  }}
+                  required
+                >
+                  <option value="">-- Choose Member --</option>
+                  {allMembers.map(m => (
+                    <option key={m.id} value={m.id}>{m.full_name} ({m.email})</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Month Selection */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#ADB5BD', marginBottom: '8px' }}>
+                    Month
+                  </label>
+                  <select
+                    value={newContribution.month}
+                    onChange={(e) => setNewContribution({ ...newContribution, month: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '10px',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      background: 'rgba(15, 15, 20, 0.8)',
+                      color: '#F8F9FA',
+                      outline: 'none',
+                    }}
+                    required
+                  >
+                    <option value="">Select Month</option>
+                    {months.map(m => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#ADB5BD', marginBottom: '8px' }}>
+                    Year
+                  </label>
+                  <input
+                    type="number"
+                    value={newContribution.year}
+                    onChange={(e) => setNewContribution({ ...newContribution, year: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '10px',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      background: 'rgba(15, 15, 20, 0.8)',
+                      color: '#F8F9FA',
+                    }}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Amounts */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#ADB5BD', marginBottom: '8px' }}>
+                    Table Banking (KES)
+                  </label>
+                  <input
+                    type="number"
+                    value={newContribution.table_banking}
+                    onChange={(e) => setNewContribution({ ...newContribution, table_banking: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '10px',
+                      border: '1px solid rgba(0, 217, 192, 0.3)',
+                      background: 'rgba(15, 15, 20, 0.8)',
+                      color: '#00D9C0',
+                      fontWeight: '700',
+                    }}
+                    required
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#ADB5BD', marginBottom: '8px' }}>
+                    Bank Savings (KES)
+                  </label>
+                  <input
+                    type="number"
+                    value={newContribution.bank_savings}
+                    onChange={(e) => setNewContribution({ ...newContribution, bank_savings: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '10px',
+                      border: '1px solid rgba(168, 85, 247, 0.3)',
+                      background: 'rgba(15, 15, 20, 0.8)',
+                      color: '#A855F7',
+                      fontWeight: '700',
+                    }}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div style={{
+                padding: '16px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '12px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: '8px',
+              }}>
+                <span style={{ color: '#ADB5BD' }}>Total:</span>
+                <span style={{ fontSize: '1.25rem', fontWeight: '800', color: '#F8F9FA' }}>
+                  KES {((parseFloat(newContribution.table_banking) || 0) + (parseFloat(newContribution.bank_savings) || 0)).toLocaleString()}
+                </span>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  width: '100%',
+                  padding: '16px',
+                  background: 'linear-gradient(135deg, #00D9C0 0%, #0A84FF 100%)',
+                  borderRadius: '12px',
+                  border: 'none',
+                  color: 'white',
+                  fontWeight: '700',
+                  fontSize: '1rem',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.7 : 1,
+                  marginTop: '16px',
+                  boxShadow: '0 8px 24px rgba(0, 217, 192, 0.3)',
+                }}
+              >
+                {loading ? 'Processing...' : 'Record Payment'}
+              </button>
+            </form>
+          </div>
+        )}
 
         {/* Pending Contributions Tab */}
         {activeTab === 'contributions' && (
@@ -705,8 +943,8 @@ export default function AdminPage() {
               </div>
             </form>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

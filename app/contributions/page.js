@@ -141,24 +141,8 @@ export default function ContributionsPage() {
             }}>
               My Contributions
             </h1>
-            <p style={{ color: '#ADB5BD', marginTop: '8px' }}>Track your monthly contributions</p>
+            <p style={{ color: '#ADB5BD', marginTop: '8px' }}>Track your monthly savings and table banking history</p>
           </div>
-          <button
-            onClick={() => setShowModal(true)}
-            style={{
-              background: 'linear-gradient(135deg, #FF9F0A 0%, #FF0A78 100%)',
-              color: 'white',
-              padding: '14px 28px',
-              borderRadius: '12px',
-              fontWeight: '600',
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow: '0 8px 24px rgba(255, 159, 10, 0.3)',
-              transition: 'all 300ms',
-            }}
-          >
-            💰 Record Contribution
-          </button>
         </div>
 
         {/* Contributions Table */}
