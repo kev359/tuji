@@ -268,25 +268,66 @@ export default function MembersPage() {
                     <h3 style={{ fontSize: '1.125rem', fontWeight: '700', color: '#F8F9FA' }}>
                       {member.full_name || 'Not Set'}
                     </h3>
-                    <p style={{ fontSize: '0.875rem', color: '#FF9F0A', textTransform: 'capitalize' }}>
+                    <p style={{ fontSize: '0.875rem', color: '#ADB5BD', textTransform: 'capitalize' }}>
                       {member.position || member.role}
                     </p>
                   </div>
                 </div>
-                {(member.role === 'treasurer' || member.role === 'admin') && (
-                  <span style={{
-                    padding: '4px 8px',
-                    borderRadius: '6px',
-                    background: 'rgba(255, 215, 0, 0.1)',
-                    border: '1px solid rgba(255, 215, 0, 0.3)',
-                    color: '#FFD700',
-                    fontSize: '0.75rem',
-                    fontWeight: '700',
-                    textTransform: 'uppercase',
-                  }}>
-                    {member.role === 'admin' ? 'Admin' : 'Treasurer'}
-                  </span>
-                )}
+                {(() => {
+                  const pos = member.position?.toLowerCase() || '';
+                  const role = member.role?.toLowerCase() || '';
+                  
+                  let badgeText = '';
+                  let badgeColor = '';
+                  let badgeBg = '';
+                  let badgeBorder = '';
+
+                  if (pos.includes('chairman')) {
+                    badgeText = 'Chairman';
+                    badgeColor = '#FFD700'; // Gold
+                    badgeBg = 'rgba(255, 215, 0, 0.1)';
+                    badgeBorder = 'rgba(255, 215, 0, 0.3)';
+                  } else if (pos.includes('vice')) {
+                    badgeText = 'Vice Chair';
+                    badgeColor = '#C0C0C0'; // Silver
+                    badgeBg = 'rgba(192, 192, 192, 0.1)';
+                    badgeBorder = 'rgba(192, 192, 192, 0.3)';
+                  } else if (pos.includes('secretary')) {
+                    badgeText = 'Secretary';
+                    badgeColor = '#00D9C0'; // Teal
+                    badgeBg = 'rgba(0, 217, 192, 0.1)';
+                    badgeBorder = 'rgba(0, 217, 192, 0.3)';
+                  } else if (pos.includes('treasurer') || role === 'treasurer') {
+                    badgeText = 'Treasurer';
+                    badgeColor = '#FF9F0A'; // Orange
+                    badgeBg = 'rgba(255, 159, 10, 0.1)';
+                    badgeBorder = 'rgba(255, 159, 10, 0.3)';
+                  } else if (role === 'admin') {
+                    badgeText = 'Admin';
+                    badgeColor = '#FF453A'; // Red
+                    badgeBg = 'rgba(255, 69, 58, 0.1)';
+                    badgeBorder = 'rgba(255, 69, 58, 0.3)';
+                  }
+
+                  if (badgeText) {
+                    return (
+                      <span style={{
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        background: badgeBg,
+                        border: `1px solid ${badgeBorder}`,
+                        color: badgeColor,
+                        fontSize: '0.75rem',
+                        fontWeight: '700',
+                        textTransform: 'uppercase',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {badgeText}
+                      </span>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
 
               <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
