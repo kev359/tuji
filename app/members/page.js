@@ -28,6 +28,7 @@ export default function MembersPage() {
   };
 
   const fetchMembers = async () => {
+    // Select position as well
     const { data: profiles, error } = await supabase
       .from('profiles')
       .select('*')
@@ -74,7 +75,8 @@ export default function MembersPage() {
 
   const filteredMembers = members.filter(member =>
     member.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    member.position?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -125,7 +127,7 @@ export default function MembersPage() {
         <div style={{ marginBottom: '32px', position: 'relative' }}>
           <input
             type="text"
-            placeholder="Search members by name or email..."
+            placeholder="Search members by name, email, or position..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{
@@ -207,9 +209,9 @@ export default function MembersPage() {
             border: '1px solid rgba(255, 215, 0, 0.3)',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 215, 0, 0.1)',
           }}>
-            <p style={{ fontSize: '0.875rem', fontWeight: '600', color: '#FFD700', marginBottom: '8px', textTransform: 'uppercase' }}>Treasurers</p>
+            <p style={{ fontSize: '0.875rem', fontWeight: '600', color: '#FFD700', marginBottom: '8px', textTransform: 'uppercase' }}>Treasurers/Admins</p>
             <p style={{ fontSize: '2rem', fontWeight: '700', color: '#F8F9FA' }}>
-              {members.filter(m => m.role === 'treasurer').length}
+              {members.filter(m => m.role === 'treasurer' || m.role === 'admin').length}
             </p>
           </div>
         </div>
@@ -266,10 +268,12 @@ export default function MembersPage() {
                     <h3 style={{ fontSize: '1.125rem', fontWeight: '700', color: '#F8F9FA' }}>
                       {member.full_name || 'Not Set'}
                     </h3>
-                    <p style={{ fontSize: '0.875rem', color: '#FF9F0A', textTransform: 'capitalize' }}>{member.role}</p>
+                    <p style={{ fontSize: '0.875rem', color: '#FF9F0A', textTransform: 'capitalize' }}>
+                      {member.position || member.role}
+                    </p>
                   </div>
                 </div>
-                {member.role === 'treasurer' && (
+                {(member.role === 'treasurer' || member.role === 'admin') && (
                   <span style={{
                     padding: '4px 8px',
                     borderRadius: '6px',
@@ -280,7 +284,7 @@ export default function MembersPage() {
                     fontWeight: '700',
                     textTransform: 'uppercase',
                   }}>
-                    Admin
+                    {member.role === 'admin' ? 'Admin' : 'Treasurer'}
                   </span>
                 )}
               </div>
