@@ -14,6 +14,11 @@ export default function DashboardPage() {
     activeLoans: 0,
     loanBalance: 0,
   });
+  const [groupStats, setGroupStats] = useState({
+    total_interest: 0,
+    total_savings: 0,
+    total_table_banking: 0
+  });
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
 
@@ -42,7 +47,10 @@ export default function DashboardPage() {
     localStorage.setItem('profile', JSON.stringify(profileData));
 
     // Fetch stats
-    await fetchStats(user.id);
+    await Promise.all([
+      fetchStats(user.id),
+      fetchGroupStats()
+    ]);
     setLoading(false);
   };
 
@@ -81,6 +89,19 @@ export default function DashboardPage() {
       activeLoans,
       loanBalance,
     });
+  };
+
+  const fetchGroupStats = async () => {
+    try {
+      const { data, error } = await supabase.rpc('get_group_stats');
+      if (error) {
+        console.warn('Error fetching group stats (function might not exist yet):', error);
+      } else if (data) {
+        setGroupStats(data);
+      }
+    } catch (e) {
+      console.error('Unexpected error fetching group stats:', e);
+    }
   };
 
   if (loading) {
@@ -137,324 +158,217 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* Stats Grid */}
+        {/* Group Stats Section (Visible to everyone) */}
+        <div style={{ marginBottom: '40px' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#F8F9FA', marginBottom: '16px', display: 'flex', alignItems: 'center' }}>
+            <span style={{ marginRight: '8px' }}>📊</span> Group Performance
+          </h2>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: '24px',
+          }}>
+             {/* Total Interest Earned */}
+             <div style={{
+              background: 'linear-gradient(135deg, rgba(50, 215, 75, 0.1) 0%, rgba(50, 215, 75, 0.05) 100%)',
+              backdropFilter: 'blur(20px)',
+              borderRadius: '20px',
+              padding: '24px',
+              border: '1px solid rgba(50, 215, 75, 0.3)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(50, 215, 75, 0.1)',
+            }}>
+               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '12px',
+                  background: 'rgba(50, 215, 75, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <svg style={{ width: '24px', height: '24px', color: '#32D74B' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <span style={{ 
+                  background: '#32D74B', 
+                  color: '#000', 
+                  fontSize: '0.75rem', 
+                  fontWeight: '700', 
+                  padding: '4px 8px', 
+                  borderRadius: '6px' 
+                }}>
+                  EARNED
+                </span>
+              </div>
+              <p style={{ color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '500', marginBottom: '4px' }}>Total Interest Earned</p>
+              <h3 style={{ fontSize: '2rem', fontWeight: '700', color: '#F8F9FA' }}>
+                KES {parseFloat(groupStats.total_interest || 0).toLocaleString()}
+              </h3>
+            </div>
+
+            {/* Table Banking Pool */}
+            <div style={{
+               background: 'linear-gradient(135deg, rgba(10, 132, 255, 0.1) 0%, rgba(10, 132, 255, 0.05) 100%)',
+               backdropFilter: 'blur(20px)',
+               borderRadius: '20px',
+               padding: '24px',
+               border: '1px solid rgba(10, 132, 255, 0.3)',
+               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(10, 132, 255, 0.1)',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '12px',
+                  background: 'rgba(10, 132, 255, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <svg style={{ width: '24px', height: '24px', color: '#0A84FF' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                </div>
+              </div>
+              <p style={{ color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '500', marginBottom: '4px' }}>Table Banking Pool</p>
+              <h3 style={{ fontSize: '2rem', fontWeight: '700', color: '#F8F9FA' }}>
+                KES {parseFloat(groupStats.total_table_banking || 0).toLocaleString()}
+              </h3>
+            </div>
+
+            {/* Bank Savings */}
+            <div style={{
+               background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(168, 85, 247, 0.05) 100%)',
+               backdropFilter: 'blur(20px)',
+               borderRadius: '20px',
+               padding: '24px',
+               border: '1px solid rgba(168, 85, 247, 0.3)',
+               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(168, 85, 247, 0.1)',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '12px',
+                  background: 'rgba(168, 85, 247, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <svg style={{ width: '24px', height: '24px', color: '#A855F7' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
+                </div>
+              </div>
+              <p style={{ color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '500', marginBottom: '4px' }}>Bank Savings (MMF/I&M)</p>
+              <h3 style={{ fontSize: '2rem', fontWeight: '700', color: '#F8F9FA' }}>
+                KES {parseFloat(groupStats.total_savings || 0).toLocaleString()}
+              </h3>
+            </div>
+          </div>
+        </div>
+
+        {/* Individual Stats Grid */}
+        <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#F8F9FA', marginBottom: '16px' }}>My Performance</h2>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: '24px',
           marginBottom: '32px',
         }}>
-          {/* Total Contributions */}
+          {/* My Total Contributions */}
           <div style={{
             background: 'rgba(30, 30, 35, 0.7)',
             backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderRadius: '16px',
+            borderRadius: '20px',
             padding: '24px',
-            border: '1px solid rgba(255, 159, 10, 0.3)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 159, 10, 0.1)',
-            transition: 'all 300ms',
-            cursor: 'pointer',
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.transform = 'translateY(-4px)';
-            e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 159, 10, 0.2)';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 159, 10, 0.1)';
-          }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <p style={{ fontSize: '0.875rem', fontWeight: '600', color: '#FF9F0A', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Total Contributions
-                </p>
-                <p style={{
-                  fontSize: '2rem',
-                  fontWeight: '700',
-                  color: '#F8F9FA',
-                  textShadow: '0 0 20px rgba(255, 159, 10, 0.3)',
-                }}>
-                  KES {stats.totalContributions.toLocaleString()}
-                </p>
-              </div>
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
               <div style={{
-                width: '56px',
-                height: '56px',
-                background: 'linear-gradient(135deg, rgba(255, 159, 10, 0.2) 0%, rgba(255, 10, 120, 0.2) 100%)',
-                borderRadius: '16px',
+                width: '48px',
+                height: '48px',
+                borderRadius: '12px',
+                background: 'rgba(255, 159, 10, 0.1)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                border: '1px solid rgba(255, 159, 10, 0.3)',
               }}>
-                <svg style={{ width: '28px', height: '28px', color: '#FF9F0A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style={{ width: '24px', height: '24px', color: '#FF9F0A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             </div>
-          </div>
-
-          {/* Confirmed Contributions */}
-          <div style={{
-            background: 'rgba(30, 30, 35, 0.7)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderRadius: '16px',
-            padding: '24px',
-            border: '1px solid rgba(0, 217, 192, 0.3)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 217, 192, 0.1)',
-            transition: 'all 300ms',
-            cursor: 'pointer',
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.transform = 'translateY(-4px)';
-            e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 217, 192, 0.2)';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 217, 192, 0.1)';
-          }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <p style={{ fontSize: '0.875rem', fontWeight: '600', color: '#00D9C0', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Confirmed Contributions
-                </p>
-                <p style={{
-                  fontSize: '2rem',
-                  fontWeight: '700',
-                  color: '#F8F9FA',
-                  textShadow: '0 0 20px rgba(0, 217, 192, 0.3)',
-                }}>
-                  KES {stats.confirmedContributions.toLocaleString()}
-                </p>
-              </div>
-              <div style={{
-                width: '56px',
-                height: '56px',
-                background: 'linear-gradient(135deg, rgba(0, 217, 192, 0.2) 0%, rgba(10, 132, 255, 0.2) 100%)',
-                borderRadius: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '1px solid rgba(0, 217, 192, 0.3)',
-              }}>
-                <svg style={{ width: '28px', height: '28px', color: '#00D9C0' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
+            <p style={{ color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '500', marginBottom: '4px' }}>My Total Contributions</p>
+            <h3 style={{ fontSize: '2rem', fontWeight: '700', color: '#F8F9FA' }}>
+              KES {stats.confirmedContributions.toLocaleString()}
+            </h3>
+            <p style={{ color: '#ADB5BD', fontSize: '0.875rem', marginTop: '4px' }}>
+              Pending: KES {(stats.totalContributions - stats.confirmedContributions).toLocaleString()}
+            </p>
           </div>
 
           {/* Active Loans */}
           <div style={{
             background: 'rgba(30, 30, 35, 0.7)',
             backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderRadius: '16px',
+            borderRadius: '20px',
             padding: '24px',
-            border: '1px solid rgba(168, 85, 247, 0.3)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(168, 85, 247, 0.1)',
-            transition: 'all 300ms',
-            cursor: 'pointer',
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.transform = 'translateY(-4px)';
-            e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(168, 85, 247, 0.2)';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(168, 85, 247, 0.1)';
-          }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <p style={{ fontSize: '0.875rem', fontWeight: '600', color: '#A855F7', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Active Loans
-                </p>
-                <p style={{
-                  fontSize: '2rem',
-                  fontWeight: '700',
-                  color: '#F8F9FA',
-                  textShadow: '0 0 20px rgba(168, 85, 247, 0.3)',
-                }}>
-                  {stats.activeLoans}
-                </p>
-              </div>
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
               <div style={{
-                width: '56px',
-                height: '56px',
-                background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(255, 10, 120, 0.2) 100%)',
-                borderRadius: '16px',
+                width: '48px',
+                height: '48px',
+                borderRadius: '12px',
+                background: 'rgba(10, 132, 255, 0.1)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                border: '1px solid rgba(168, 85, 247, 0.3)',
               }}>
-                <svg style={{ width: '28px', height: '28px', color: '#A855F7' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                <svg style={{ width: '24px', height: '24px', color: '#0A84FF' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
               </div>
             </div>
+            <p style={{ color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '500', marginBottom: '4px' }}>Active Loans</p>
+            <h3 style={{ fontSize: '2rem', fontWeight: '700', color: '#F8F9FA' }}>
+              {stats.activeLoans}
+            </h3>
           </div>
 
           {/* Loan Balance */}
           <div style={{
             background: 'rgba(30, 30, 35, 0.7)',
             backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderRadius: '16px',
+            borderRadius: '20px',
             padding: '24px',
-            border: '1px solid rgba(255, 10, 120, 0.3)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 10, 120, 0.1)',
-            transition: 'all 300ms',
-            cursor: 'pointer',
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.transform = 'translateY(-4px)';
-            e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 10, 120, 0.2)';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 10, 120, 0.1)';
-          }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <p style={{ fontSize: '0.875rem', fontWeight: '600', color: '#FF0A78', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Outstanding Balance
-                </p>
-                <p style={{
-                  fontSize: '2rem',
-                  fontWeight: '700',
-                  color: '#F8F9FA',
-                  textShadow: '0 0 20px rgba(255, 10, 120, 0.3)',
-                }}>
-                  KES {stats.loanBalance.toLocaleString()}
-                </p>
-              </div>
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
               <div style={{
-                width: '56px',
-                height: '56px',
-                background: 'linear-gradient(135deg, rgba(255, 10, 120, 0.2) 0%, rgba(255, 159, 10, 0.2) 100%)',
-                borderRadius: '16px',
+                width: '48px',
+                height: '48px',
+                borderRadius: '12px',
+                background: 'rgba(255, 69, 58, 0.1)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                border: '1px solid rgba(255, 10, 120, 0.3)',
               }}>
-                <svg style={{ width: '28px', height: '28px', color: '#FF0A78' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                <svg style={{ width: '24px', height: '24px', color: '#FF453A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div style={{
-          background: 'rgba(30, 30, 35, 0.7)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderRadius: '16px',
-          padding: '24px',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-        }}>
-          <h2 style={{
-            fontSize: '1.25rem',
-            fontWeight: '700',
-            color: '#F8F9FA',
-            marginBottom: '20px',
-          }}>Quick Actions</h2>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '16px',
-          }}>
-            <button
-              onClick={() => router.push('/contributions')}
-              style={{
-                background: 'linear-gradient(135deg, #FF9F0A 0%, #FF0A78 100%)',
-                color: 'white',
-                padding: '16px 24px',
-                borderRadius: '12px',
-                fontWeight: '600',
-                fontSize: '1rem',
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'all 300ms',
-                boxShadow: '0 8px 24px rgba(255, 159, 10, 0.3)',
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 12px 32px rgba(255, 159, 10, 0.4)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 8px 24px rgba(255, 159, 10, 0.3)';
-              }}
-            >
-              💰 Record Contribution
-            </button>
-            <button
-              onClick={() => router.push('/loans')}
-              style={{
-                background: 'linear-gradient(135deg, #00D9C0 0%, #0A84FF 100%)',
-                color: 'white',
-                padding: '16px 24px',
-                borderRadius: '12px',
-                fontWeight: '600',
-                fontSize: '1rem',
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'all 300ms',
-                boxShadow: '0 8px 24px rgba(0, 217, 192, 0.3)',
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 12px 32px rgba(0, 217, 192, 0.4)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 217, 192, 0.3)';
-              }}
-            >
-              🏦 Request Loan
-            </button>
-            <button
-              onClick={() => router.push('/members')}
-              style={{
-                background: 'transparent',
-                color: '#A855F7',
-                padding: '16px 24px',
-                borderRadius: '12px',
-                fontWeight: '600',
-                fontSize: '1rem',
-                border: '2px solid #A855F7',
-                cursor: 'pointer',
-                transition: 'all 300ms',
-                boxShadow: '0 0 20px rgba(168, 85, 247, 0.2)',
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.background = 'linear-gradient(135deg, #A855F7 0%, #FF0A78 100%)';
-                e.currentTarget.style.color = 'white';
-                e.currentTarget.style.borderColor = 'transparent';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 12px 32px rgba(168, 85, 247, 0.4)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.color = '#A855F7';
-                e.currentTarget.style.borderColor = '#A855F7';
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 0 20px rgba(168, 85, 247, 0.2)';
-              }}
-            >
-              👥 View Members
-            </button>
+            <p style={{ color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '500', marginBottom: '4px' }}>Loan Balance</p>
+            <h3 style={{ fontSize: '2rem', fontWeight: '700', color: '#FF453A' }}>
+              KES {stats.loanBalance.toLocaleString()}
+            </h3>
           </div>
         </div>
       </main>
