@@ -102,7 +102,7 @@ export default function Navbar() {
             ))}
             
             {/* Admin Link */}
-            {profile?.role === 'treasurer' && (
+            {(profile?.role === 'treasurer' || profile?.role === 'admin') && (
               <Link
                 href="/admin"
                 style={{
