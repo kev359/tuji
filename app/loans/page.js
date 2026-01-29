@@ -289,11 +289,7 @@ export default function LoansPage() {
                     </div>
                 </div>
 
-                <div style={{ marginTop: '24px', padding: '12px', background: 'rgba(255, 159, 10, 0.1)', borderRadius: '8px', border: '1px solid rgba(255, 159, 10, 0.2)' }}>
-                    <p style={{ fontSize: '0.8rem', color: '#FF9F0A', lineHeight: '1.4' }}>
-                        <strong>Note:</strong> When repaying via M-Pesa or Paybill, please share the transaction code with the treasurer for confirmation.
-                    </p>
-                </div>
+
             </div>
 
         </div>
