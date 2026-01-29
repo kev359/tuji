@@ -24,6 +24,17 @@ export default function AdminPage() {
     notes: '',
   });
 
+  // Member Details Modal State
+  const [showMemberModal, setShowMemberModal] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [memberStats, setMemberStats] = useState({
+    contributions: [],
+    loans: [],
+    totalSavings: 0,
+    totalTableBanking: 0,
+    loanBalance: 0
+  });
+
   // New Contribution State
   const [newContribution, setNewContribution] = useState({
     member_id: '',
@@ -36,6 +47,41 @@ export default function AdminPage() {
   useEffect(() => {
     checkAuth();
   }, []);
+
+  const openMemberDetails = async (member) => {
+    setLoading(true);
+    setSelectedMember(member);
+    
+    // Fetch Member Contributions
+    const { data: contributions } = await supabase
+      .from('contributions')
+      .select('*')
+      .eq('member_id', member.id)
+      .order('created_at', { ascending: false });
+      
+    // Fetch Member Loans
+    const { data: loans } = await supabase
+      .from('loans')
+      .select('*')
+      .eq('member_id', member.id)
+      .order('request_date', { ascending: false });
+
+    // Calculate Stats
+    const totalTableBanking = contributions?.filter(c => c.status === 'confirmed').reduce((sum, c) => sum + (c.table_banking_amount || 0), 0) || 0;
+    const totalSavings = contributions?.filter(c => c.status === 'confirmed').reduce((sum, c) => sum + (c.bank_savings_amount || 0), 0) || 0;
+    const loanBalance = loans?.filter(l => l.status === 'active').reduce((sum, l) => sum + (l.balance || 0), 0) || 0;
+
+    setMemberStats({
+      contributions: contributions || [],
+      loans: loans || [],
+      totalTableBanking,
+      totalSavings,
+      loanBalance
+    });
+    
+    setLoading(false);
+    setShowMemberModal(true);
+  };
 
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -376,7 +422,8 @@ export default function AdminPage() {
             { id: 'new_contribution', label: `+ Record Contribution`, color: '#00D9C0' },
             { id: 'contributions', label: `Pending Contribs (${pendingContributions.length})`, color: '#32D74B' },
             { id: 'loans', label: `Pending Loans (${pendingLoans.length})`, color: '#A855F7' },
-            { id: 'payments', label: `Record Loan Payment`, color: '#0A84FF' }
+            { id: 'payments', label: `Record Loan Payment`, color: '#0A84FF' },
+            { id: 'members_accounts', label: `Member Accounts`, color: '#FFD700' }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -398,6 +445,70 @@ export default function AdminPage() {
             </button>
           ))}
         </div>
+
+        {/* Member Accounts Tab */}
+        {activeTab === 'members_accounts' && (
+          <div style={{
+            background: 'rgba(30, 30, 35, 0.7)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: '16px',
+            padding: '24px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+          }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#F8F9FA', marginBottom: '16px' }}>All Member Accounts</h2>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.75rem', textTransform: 'uppercase' }}>Member Name</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.75rem', textTransform: 'uppercase' }}>Role</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.75rem', textTransform: 'uppercase' }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allMembers.map((member) => (
+                    <tr key={member.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                      <td style={{ padding: '16px', color: '#F8F9FA', fontWeight: '500' }}>
+                        {member.full_name}
+                        <div style={{ fontSize: '0.75rem', color: '#ADB5BD', marginTop: '4px' }}>{member.email}</div>
+                      </td>
+                      <td style={{ padding: '16px' }}>
+                         <span style={{ 
+                            background: 'rgba(255, 255, 255, 0.1)', 
+                            padding: '4px 8px', 
+                            borderRadius: '6px', 
+                            fontSize: '0.75rem',
+                            color: '#ADB5BD',
+                            textTransform: 'capitalize' 
+                          }}>
+                            {member.role || 'Member'}
+                          </span>
+                      </td>
+                      <td style={{ padding: '16px' }}>
+                        <button
+                          onClick={() => openMemberDetails(member)}
+                          style={{
+                            background: 'rgba(255, 215, 0, 0.1)',
+                            color: '#FFD700',
+                            border: '1px solid rgba(255, 215, 0, 0.4)',
+                            padding: '8px 16px',
+                            borderRadius: '8px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            transition: 'all 200ms',
+                          }}
+                        >
+                          View Statement
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Record New Contribution Tab */}
         {activeTab === 'new_contribution' && (
@@ -640,6 +751,7 @@ export default function AdminPage() {
             )}
           </div>
         )}
+
 
         {/* Pending Loans Tab */}
         {activeTab === 'loans' && (
@@ -944,7 +1056,164 @@ export default function AdminPage() {
             </form>
           </div>
         )}
-      </div>
+      {/* Member Details Modal */}
+      {showMemberModal && selectedMember && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.9)',
+          backdropFilter: 'blur(10px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px',
+          zIndex: 100,
+          overflowY: 'auto'
+        }}>
+          <div style={{
+            background: '#141419',
+            borderRadius: '20px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            width: '100%',
+            maxWidth: '900px',
+            maxHeight: '90vh',
+            display: 'flex',
+            flexDirection: 'column',
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              padding: '24px',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              background: 'rgba(255, 255, 255, 0.02)',
+            }}>
+              <div>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#F8F9FA' }}>{selectedMember.full_name}</h2>
+                <p style={{ color: '#ADB5BD', fontSize: '0.875rem' }}>{selectedMember.email}</p>
+              </div>
+              <button
+                onClick={() => setShowMemberModal(false)}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#fff',
+                  cursor: 'pointer',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ padding: '24px', overflowY: 'auto' }}>
+              {/* Summary Stats */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '16px',
+                marginBottom: '32px',
+              }}>
+                <div style={{ background: 'rgba(10, 132, 255, 0.1)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(10, 132, 255, 0.2)' }}>
+                   <p style={{ color: '#0A84FF', fontSize: '0.875rem', fontWeight: '600' }}>Table Banking (Pool)</p>
+                   <p style={{ fontSize: '1.5rem', fontWeight: '700', color: '#fff' }}>KES {memberStats.totalTableBanking.toLocaleString()}</p>
+                </div>
+                <div style={{ background: 'rgba(168, 85, 247, 0.1)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(168, 85, 247, 0.2)' }}>
+                   <p style={{ color: '#A855F7', fontSize: '0.875rem', fontWeight: '600' }}>Bank Savings (MMF)</p>
+                   <p style={{ fontSize: '1.5rem', fontWeight: '700', color: '#fff' }}>KES {memberStats.totalSavings.toLocaleString()}</p>
+                </div>
+                <div style={{ background: 'rgba(255, 69, 58, 0.1)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255, 69, 58, 0.2)' }}>
+                   <p style={{ color: '#FF453A', fontSize: '0.875rem', fontWeight: '600' }}>Active Loan Balance</p>
+                   <p style={{ fontSize: '1.5rem', fontWeight: '700', color: '#FF453A' }}>KES {memberStats.loanBalance.toLocaleString()}</p>
+                </div>
+              </div>
+
+              {/* Loan History */}
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#F8F9FA', marginBottom: '16px', paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                Loan History
+              </h3>
+              {memberStats.loans.length === 0 ? (
+                <p style={{ color: '#ADB5BD', marginBottom: '32px' }}>No loans found.</p>
+              ) : (
+                <div style={{ overflowX: 'auto', marginBottom: '32px', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+                    <thead style={{ background: 'rgba(255,255,255,0.02)' }}>
+                      <tr>
+                        <th style={{ padding: '12px', textAlign: 'left', color: '#ADB5BD' }}>Date</th>
+                        <th style={{ padding: '12px', textAlign: 'left', color: '#ADB5BD' }}>Amount + Int.</th>
+                        <th style={{ padding: '12px', textAlign: 'left', color: '#ADB5BD' }}>Status</th>
+                        <th style={{ padding: '12px', textAlign: 'right', color: '#ADB5BD' }}>Balance</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {memberStats.loans.map(loan => (
+                        <tr key={loan.id} style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                          <td style={{ padding: '12px', color: '#F8F9FA' }}>{new Date(loan.request_date).toLocaleDateString()}</td>
+                          <td style={{ padding: '12px', color: '#F8F9FA' }}>KES {parseFloat(loan.total_amount).toLocaleString()}</td>
+                          <td style={{ padding: '12px' }}>
+                             <span style={{ 
+                                background: loan.status === 'active' ? 'rgba(50, 215, 75, 0.2)' : loan.status === 'completed' ? 'rgba(10, 132, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                                color: loan.status === 'active' ? '#32D74B' : loan.status === 'completed' ? '#0A84FF' : '#ADB5BD',
+                                padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem', textTransform: 'capitalize'
+                             }}>
+                                {loan.status}
+                             </span>
+                          </td>
+                          <td style={{ padding: '12px', color: '#F8F9FA', textAlign: 'right' }}>KES {parseFloat(loan.balance).toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Contribution History */}
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#F8F9FA', marginBottom: '16px', paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                Contribution History
+              </h3>
+               {memberStats.contributions.length === 0 ? (
+                <p style={{ color: '#ADB5BD' }}>No contributions found.</p>
+              ) : (
+                <div style={{ overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+                    <thead style={{ background: 'rgba(255,255,255,0.02)' }}>
+                      <tr>
+                        <th style={{ padding: '12px', textAlign: 'left', color: '#ADB5BD' }}>Month</th>
+                        <th style={{ padding: '12px', textAlign: 'left', color: '#ADB5BD' }}>Table Banking</th>
+                        <th style={{ padding: '12px', textAlign: 'left', color: '#ADB5BD' }}>Savings</th>
+                        <th style={{ padding: '12px', textAlign: 'right', color: '#ADB5BD' }}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {memberStats.contributions.map(c => (
+                        <tr key={c.id} style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                          <td style={{ padding: '12px', color: '#F8F9FA' }}>{c.month} {c.year}</td>
+                          <td style={{ padding: '12px', color: '#0A84FF' }}>KES {parseFloat(c.table_banking_amount).toLocaleString()}</td>
+                          <td style={{ padding: '12px', color: '#A855F7' }}>KES {parseFloat(c.bank_savings_amount).toLocaleString()}</td>
+                          <td style={{ padding: '12px', textAlign: 'right' }}>
+                             <span style={{ 
+                                color: c.status === 'confirmed' ? '#32D74B' : '#FF9F0A',
+                                fontSize: '0.75rem', fontWeight: '600', textTransform: 'capitalize'
+                             }}>
+                                {c.status}
+                             </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
