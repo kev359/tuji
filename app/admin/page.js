@@ -1126,7 +1126,8 @@ export default function AdminPage() {
               </div>
             </form>
           </div>
-        )}
+        </div>
+      )}
       {/* Member Details Modal */}
       {showMemberModal && selectedMember && (
         <div style={{
