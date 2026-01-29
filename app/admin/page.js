@@ -42,6 +42,8 @@ export default function AdminPage() {
     year: new Date().getFullYear(),
     table_banking: 1000,
     bank_savings: 1000,
+    payment_method: 'cash',
+    reference_code: '',
   });
 
   useEffect(() => {
@@ -314,6 +316,8 @@ export default function AdminPage() {
           year: parseInt(newContribution.year),
           table_banking_amount: parseFloat(newContribution.table_banking),
           bank_savings_amount: parseFloat(newContribution.bank_savings),
+          payment_method: newContribution.payment_method,
+          reference_code: newContribution.reference_code,
           status: 'confirmed', // Auto-confirm since admin is adding it
           confirmed_by: user.id,
           confirmed_at: new Date().toISOString(),
@@ -328,6 +332,8 @@ export default function AdminPage() {
         year: new Date().getFullYear(),
         table_banking: 1000,
         bank_savings: 1000,
+        payment_method: 'cash',
+        reference_code: '',
       });
       await loadAllData();
     } catch (error) {
@@ -598,6 +604,71 @@ export default function AdminPage() {
                     required
                   />
                 </div>
+              </div>
+
+              {/* Payment Method Section */}
+              <div style={{ padding: '16px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                <p style={{ fontSize: '0.875rem', fontWeight: '600', color: '#ADB5BD', marginBottom: '12px' }}>Payment Details</p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#ADB5BD', marginBottom: '6px' }}>
+                      Method
+                    </label>
+                    <select
+                      value={newContribution.payment_method}
+                      onChange={(e) => setNewContribution({ ...newContribution, payment_method: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        background: 'rgba(0, 0, 0, 0.2)',
+                        color: '#F8F9FA',
+                        outline: 'none',
+                      }}
+                    >
+                      <option value="cash">💵 Cash (to Treasurer)</option>
+                      <option value="mpesa">📱 M-Pesa (to Treasurer)</option>
+                      <option value="paybill">🏦 Paybill (I&M Bank)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#ADB5BD', marginBottom: '6px' }}>
+                      Reference Code
+                    </label>
+                    <input
+                      type="text"
+                      value={newContribution.reference_code}
+                      onChange={(e) => setNewContribution({ ...newContribution, reference_code: e.target.value })}
+                      placeholder={newContribution.payment_method === 'cash' ? 'Optional' : 'e.g. QWE23...'}
+                      disabled={newContribution.payment_method === 'cash'}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        background: newContribution.payment_method === 'cash' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.2)',
+                        color: '#F8F9FA',
+                        outline: 'none',
+                        textTransform: 'uppercase',
+                        opacity: newContribution.payment_method === 'cash' ? 0.5 : 1,
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Info Box based on Selection */}
+                {newContribution.payment_method === 'mpesa' && (
+                   <div style={{ fontSize: '0.75rem', color: '#32D74B', background: 'rgba(50, 215, 75, 0.1)', padding: '8px', borderRadius: '6px' }}>
+                     Send to Treasurer: <strong>0758 351 715</strong>
+                   </div>
+                )}
+                {newContribution.payment_method === 'paybill' && (
+                   <div style={{ fontSize: '0.75rem', color: '#0A84FF', background: 'rgba(10, 132, 255, 0.1)', padding: '8px', borderRadius: '6px' }}>
+                     Paybill: <strong>542542</strong> (I&M Bank) <br/>
+                     Account: <strong>29930</strong> (Tujiimarishe SHG)
+                   </div>
+                )}
               </div>
 
               {/* Amounts */}

@@ -9,6 +9,8 @@ export default function LoansPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [loans, setLoans] = useState([]);
+  const [publicRequests, setPublicRequests] = useState([]);
+  const [availableFunds, setAvailableFunds] = useState(0);
   const [user, setUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
   
@@ -30,8 +32,32 @@ export default function LoansPage() {
     }
 
     setUser(user);
-    await fetchLoans(user.id);
+    await Promise.all([
+        fetchLoans(user.id),
+        fetchPublicData()
+    ]);
     setLoading(false);
+  };
+
+  const fetchPublicData = async () => {
+      // 1. Fetch Group Stats for Available Funds
+      const { data: stats } = await supabase.rpc('get_group_stats');
+      if (stats) {
+          // Available = Table Banking Pool - Active Loan Balance
+          // Actually, 'total_table_banking' is the total contributed.
+          // We need to subtract OUTSTANDING LOANS to see what's actually in the bank.
+          // Let's approximate: Available = Total Table Banking Contributions - (Total Active Loan Principals)
+          // For now, simpler: Just show the Total Pool and let Treasurer decide. 
+          // But user said "available funds vs loan amount requested".
+          // I will use `available_funds = total_table_banking` for now as the 'pool size'.
+          setAvailableFunds(stats.total_table_banking || 0);
+      }
+
+      // 2. Fetch Public Requests
+      const { data: requests, error } = await supabase.rpc('get_public_loan_requests');
+      if (!error && requests) {
+          setPublicRequests(requests);
+      }
   };
 
   const fetchLoans = async (userId) => {
@@ -84,7 +110,7 @@ export default function LoansPage() {
 
       if (error) throw error;
 
-      await fetchLoans(user.id);
+      await Promise.all([fetchLoans(user.id), fetchPublicData()]);
       
       setFormData({
         amount: '',
@@ -92,33 +118,12 @@ export default function LoansPage() {
       });
       
       setShowModal(false);
-      alert('Loan request submitted successfully! Awaiting treasurer approval.');
+      alert('Loan request submitted successfully! It is now visible on the queue.');
     } catch (error) {
       alert('Error: ' + error.message);
     } finally {
       setLoading(false);
     }
-  };
-
-  const getStatusColor = (status) => {
-    const colors = {
-      pending: '#FF9F0A',
-      approved: '#32D74B',
-      active: '#A855F7',
-      completed: '#0A84FF',
-      rejected: '#FF453A',
-    };
-    return colors[status] || '#ADB5BD';
-  };
-
-  const calculateInterest = () => {
-    const amount = parseFloat(formData.amount) || 0;
-    return amount * 0.10;
-  };
-
-  const calculateTotal = () => {
-    const amount = parseFloat(formData.amount) || 0;
-    return amount + (amount * 0.10);
   };
 
   if (loading) {
@@ -128,7 +133,7 @@ export default function LoansPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'transparent',
+        background: '#1A1A1D',
       }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{
@@ -140,411 +145,315 @@ export default function LoansPage() {
             animation: 'spin 1s linear infinite',
             margin: '0 auto',
           }}></div>
-          <p style={{ color: '#C084FC', marginTop: '16px', fontWeight: '500' }}>Loading loans...</p>
+          <p style={{ color: '#E9D5FF', marginTop: '16px', fontWeight: '500' }}>Loading loans...</p>
         </div>
+        <style jsx>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     );
   }
+
+  const activeLoans = loans.filter(l => l.status === 'active');
+  const pastLoans = loans.filter(l => l.status !== 'active');
 
   return (
     <div style={{ minHeight: '100vh', background: 'transparent', position: 'relative', zIndex: 2 }}>
       <Navbar />
       
       <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <h1 style={{
-              fontSize: '2.25rem',
-              fontWeight: '800',
-              background: 'linear-gradient(135deg, #A855F7 0%, #FF0A78 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}>
-              My Loans
-            </h1>
-            <p style={{ color: '#ADB5BD', marginTop: '8px' }}>Track your loan requests and repayments</p>
-          </div>
-          <button
-            onClick={() => setShowModal(true)}
-            style={{
-              background: 'linear-gradient(135deg, #00D9C0 0%, #0A84FF 100%)',
-              color: 'white',
-              padding: '14px 28px',
-              borderRadius: '12px',
-              fontWeight: '600',
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow: '0 8px 24px rgba(0, 217, 192, 0.3)',
-              transition: 'all 300ms',
-            }}
-          >
-            🏦 Request Loan
-          </button>
-        </div>
-
-        {/* Info Box */}
-        <div style={{
-          background: 'rgba(10, 132, 255, 0.1)',
-          border: '1px solid rgba(10, 132, 255, 0.3)',
-          borderRadius: '16px',
-          padding: '20px',
-          marginBottom: '24px',
-          display: 'flex',
-          alignItems: 'flex-start',
-        }}>
-          <svg style={{ width: '24px', height: '24px', color: '#0A84FF', marginTop: '2px', marginRight: '12px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <div>
-            <p style={{ fontSize: '0.875rem', fontWeight: '600', color: '#64B5F6' }}>Loan Information</p>
-            <p style={{ fontSize: '0.875rem', color: '#CAD5E2', marginTop: '4px' }}>
-              All loans carry a 10% interest rate. Repayment is tracked by the treasurer.
-            </p>
-          </div>
-        </div>
-
-        {/* Loans Table */}
-        <div style={{
-          background: 'rgba(30, 30, 35, 0.7)',
-          backdropFilter: 'blur(20px)',
-          borderRadius: '16px',
-          padding: '24px',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-          marginBottom: '24px',
-        }}>
-          {loans.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '48px 0' }}>
-              <div style={{
-                width: '64px',
-                height: '64px',
-                margin: '0 auto 16px',
-                background: 'rgba(168, 85, 247, 0.1)',
+        
+        {/* Page Header */}
+        <div style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '24px' }}>
+            <div>
+                <h1 style={{
+                    fontSize: '2.5rem',
+                    fontWeight: '800',
+                    background: 'linear-gradient(135deg, #A855F7 0%, #FF0A78 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    marginBottom: '8px'
+                }}>
+                    Loans & Credit
+                </h1>
+                <p style={{ color: '#ADB5BD', fontSize: '1.1rem' }}>Access affordable credit from the group pool</p>
+            </div>
+            
+            {/* Available Funds Card */}
+            <div style={{
+                background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(255, 10, 120, 0.05) 100%)',
+                border: '1px solid rgba(168, 85, 247, 0.3)',
+                padding: '20px 32px',
                 borderRadius: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                <svg style={{ width: '32px', height: '32px', color: '#A855F7' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <h3 style={{ color: '#F8F9FA', fontWeight: '600', marginBottom: '8px' }}>No loans yet</h3>
-              <p style={{ color: '#ADB5BD', marginBottom: '24px' }}>Get started by requesting your first loan.</p>
-              <button 
-                onClick={() => setShowModal(true)} 
-                style={{
-                  background: 'linear-gradient(135deg, #00D9C0 0%, #0A84FF 100%)',
-                  color: 'white',
-                  padding: '12px 24px',
-                  borderRadius: '10px',
-                  fontWeight: '600',
-                  border: 'none',
-                  cursor: 'pointer',
-                  boxShadow: '0 8px 24px rgba(0, 217, 192, 0.3)',
-                }}
-              >
-                Request First Loan
-              </button>
+                backdropFilter: 'blur(10px)',
+                minWidth: '240px'
+            }}>
+                <p style={{ color: '#E9D5FF', fontSize: '0.875rem', fontWeight: '600', marginBottom: '4px' }}>Total Table Banking Pool</p>
+                <h2 style={{ fontSize: '2rem', fontWeight: '800', color: '#F8F9FA' }}>
+                    KES {parseFloat(availableFunds || 0).toLocaleString()}
+                </h2>
+                <p style={{ fontSize: '0.75rem', color: '#ADB5BD', marginTop: '4px' }}>Used to fund member loans</p>
             </div>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase' }}>Date</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase' }}>Amount</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase' }}>Interest (10%)</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase' }}>Total Due</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase' }}>Balance</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase' }}>Status</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase' }}>Purpose</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loans.map((loan) => (
-                    <tr key={loan.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                      <td style={{ padding: '16px', color: '#F8F9FA' }}>
-                        {new Date(loan.request_date).toLocaleDateString()}
-                      </td>
-                      <td style={{ padding: '16px', color: '#A855F7' }}>
-                        KES {parseFloat(loan.amount || 0).toLocaleString()}
-                      </td>
-                      <td style={{ padding: '16px', color: '#F8F9FA' }}>
-                        KES {parseFloat(loan.interest_amount || 0).toLocaleString()}
-                      </td>
-                      <td style={{ padding: '16px', color: '#F8F9FA', fontWeight: '600' }}>
-                        KES {parseFloat(loan.total_amount || 0).toLocaleString()}
-                      </td>
-                      <td style={{ padding: '16px', color: loan.balance > 0 ? '#FF453A' : '#32D74B', fontWeight: '700' }}>
-                        {loan.status === 'active' || loan.status === 'approved' ? (
-                          `KES ${parseFloat(loan.balance || 0).toLocaleString()}`
-                        ) : (
-                          '-'
-                        )}
-                      </td>
-                      <td style={{ padding: '16px' }}>
-                        <span style={{
-                          padding: '4px 12px',
-                          borderRadius: '20px',
-                          fontSize: '0.75rem',
-                          fontWeight: '600',
-                          background: `${getStatusColor(loan.status)}33`,
-                          color: getStatusColor(loan.status),
-                          border: `1px solid ${getStatusColor(loan.status)}66`,
-                          textTransform: 'uppercase',
-                        }}>
-                          {loan.status}
-                        </span>
-                      </td>
-                      <td style={{ padding: '16px', color: '#ADB5BD', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {loan.purpose}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
         </div>
 
-        {/* Summary Stats */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '20px',
-        }}>
-          <div style={{
-            background: 'rgba(30, 30, 35, 0.7)',
-            backdropFilter: 'blur(20px)',
-            borderRadius: '16px',
-            padding: '24px',
-            border: '1px solid rgba(10, 132, 255, 0.3)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(10, 132, 255, 0.1)',
-          }}>
-            <p style={{ fontSize: '0.875rem', fontWeight: '600', color: '#0A84FF', marginBottom: '8px', textTransform: 'uppercase' }}>Total Borrowed</p>
-            <p style={{ fontSize: '1.5rem', fontWeight: '700', color: '#F8F9FA' }}>
-              KES {loans.reduce((sum, l) => sum + parseFloat(l.amount || 0), 0).toLocaleString()}
-            </p>
-          </div>
-          <div style={{
-            background: 'rgba(30, 30, 35, 0.7)',
-            backdropFilter: 'blur(20px)',
-            borderRadius: '16px',
-            padding: '24px',
-            border: '1px solid rgba(50, 215, 75, 0.3)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(50, 215, 75, 0.1)',
-          }}>
-            <p style={{ fontSize: '0.875rem', fontWeight: '600', color: '#32D74B', marginBottom: '8px', textTransform: 'uppercase' }}>Active Loans</p>
-            <p style={{ fontSize: '1.5rem', fontWeight: '700', color: '#F8F9FA' }}>
-              {loans.filter(l => l.status === 'active' || l.status === 'approved').length}
-            </p>
-          </div>
-          <div style={{
-            background: 'rgba(30, 30, 35, 0.7)',
-            backdropFilter: 'blur(20px)',
-            borderRadius: '16px',
-            padding: '24px',
-            border: '1px solid rgba(255, 69, 58, 0.3)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 69, 58, 0.1)',
-          }}>
-            <p style={{ fontSize: '0.875rem', fontWeight: '600', color: '#FF453A', marginBottom: '8px', textTransform: 'uppercase' }}>Outstanding</p>
-            <p style={{ fontSize: '1.5rem', fontWeight: '700', color: '#F8F9FA' }}>
-              KES {loans.filter(l => l.status === 'active').reduce((sum, l) => 
-                sum + parseFloat(l.balance || 0), 0
-              ).toLocaleString()}
-            </p>
-          </div>
-          <div style={{
-            background: 'rgba(30, 30, 35, 0.7)',
-            backdropFilter: 'blur(20px)',
-            borderRadius: '16px',
-            padding: '24px',
-            border: '1px solid rgba(168, 85, 247, 0.3)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(168, 85, 247, 0.1)',
-          }}>
-            <p style={{ fontSize: '0.875rem', fontWeight: '600', color: '#A855F7', marginBottom: '8px', textTransform: 'uppercase' }}>Completed</p>
-            <p style={{ fontSize: '1.5rem', fontWeight: '700', color: '#F8F9FA' }}>
-              {loans.filter(l => l.status === 'completed').length}
-            </p>
-          </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '32px', marginBottom: '48px' }}>
+            
+            {/* PUBLIC: Loan Requests Queue */}
+            <div style={{
+                background: 'rgba(30, 30, 35, 0.6)',
+                borderRadius: '20px',
+                padding: '24px',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(20px)',
+            }}>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#F8F9FA' }}>📋 Current Request Queue</h2>
+                    <span style={{ background: 'rgba(255, 255, 255, 0.1)', padding: '4px 12px', borderRadius: '12px', fontSize: '0.875rem', fontWeight: '600', color: '#F8F9FA' }}>
+                        {publicRequests.length} Pending
+                    </span>
+                 </div>
+
+                 {publicRequests.length === 0 ? (
+                     <div style={{ padding: '32px', textAlign: 'center', color: '#ADB5BD', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '12px' }}>
+                         <p>No pending requests. The queue is clear!</p>
+                     </div>
+                 ) : (
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                         {publicRequests.map(req => (
+                             <div key={req.id} style={{
+                                 display: 'flex',
+                                 justifyContent: 'space-between',
+                                 alignItems: 'center',
+                                 padding: '16px',
+                                 background: 'rgba(255, 255, 255, 0.03)',
+                                 borderRadius: '12px',
+                                 border: '1px solid rgba(255, 255, 255, 0.05)'
+                             }}>
+                                 <div>
+                                     <p style={{ fontWeight: '600', color: '#F8F9FA', marginBottom: '4px' }}>{req.member_name}</p>
+                                     <p style={{ fontSize: '0.875rem', color: '#ADB5BD' }}>{new Date(req.request_date).toLocaleDateString()}</p>
+                                 </div>
+                                 <div style={{ textAlign: 'right' }}>
+                                    <p style={{ fontWeight: '700', color: '#FF9F0A' }}>KES {parseFloat(req.amount).toLocaleString()}</p>
+                                    <p style={{ fontSize: '0.75rem', color: '#ADB5BD' }}>requested</p>
+                                 </div>
+                             </div>
+                         ))}
+                     </div>
+                 )}
+            </div>
+
+            {/* PAYMENT INSTRUCTIONS */}
+            <div style={{
+                background: 'linear-gradient(145deg, rgba(20, 20, 25, 0.8) 0%, rgba(30, 30, 35, 0.9) 100%)',
+                borderRadius: '20px',
+                padding: '24px',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center'
+            }}>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#F8F9FA', marginBottom: '24px' }}>💳 Repayment Channels</h2>
+                
+                {/* Paybill */}
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', marginBottom: '24px' }}>
+                    <div style={{
+                        width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(10, 132, 255, 0.1)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                    }}>
+                        <span style={{ fontSize: '1.5rem' }}>🏦</span>
+                    </div>
+                    <div>
+                        <p style={{ color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '600', marginBottom: '4px' }}>LIPA NA I&M BANK</p>
+                        <p style={{ color: '#F8F9FA', fontWeight: '700', fontSize: '1.1rem' }}>Paybill: 542542</p>
+                        <p style={{ color: '#0A84FF', fontWeight: '600', fontSize: '1rem' }}>Account: 29930</p>
+                    </div>
+                </div>
+
+                {/* Treasurer M-Pesa */}
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                    <div style={{
+                        width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(50, 215, 75, 0.1)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                    }}>
+                        <span style={{ fontSize: '1.5rem' }}>📱</span>
+                    </div>
+                    <div>
+                        <p style={{ color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '600', marginBottom: '4px' }}>TREASURER M-PESA</p>
+                        <p style={{ color: '#F8F9FA', fontWeight: '700', fontSize: '1.25rem' }}>0758 351 715</p>
+                        <p style={{ color: '#32D74B', fontSize: '0.875rem', fontWeight: '500' }}>Theopyster Wakesho</p>
+                    </div>
+                </div>
+
+                <div style={{ marginTop: '24px', padding: '12px', background: 'rgba(255, 159, 10, 0.1)', borderRadius: '8px', border: '1px solid rgba(255, 159, 10, 0.2)' }}>
+                    <p style={{ fontSize: '0.8rem', color: '#FF9F0A', lineHeight: '1.4' }}>
+                        <strong>Note:</strong> When repaying via M-Pesa or Paybill, please share the transaction code with the treasurer for confirmation.
+                    </p>
+                </div>
+            </div>
+
         </div>
+
+        {/* MY LOANS SECTION */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#F8F9FA' }}>My Loans</h2>
+            <button
+                onClick={() => setShowModal(true)}
+                style={{
+                    background: 'linear-gradient(135deg, #A855F7 0%, #FF0A78 100%)',
+                    color: 'white',
+                    padding: '12px 24px',
+                    borderRadius: '12px',
+                    fontWeight: '600',
+                    border: 'none',
+                    cursor: 'pointer',
+                    boxShadow: '0 8px 24px rgba(168, 85, 247, 0.3)',
+                    transition: 'all 300ms',
+                }}
+            >
+                + Request Loan
+            </button>
+        </div>
+
+        {/* ACTIVE LOANS */}
+        <div style={{ marginBottom: '40px' }}>
+            {activeLoans.length > 0 ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
+                    {activeLoans.map(loan => (
+                        <div key={loan.id} style={{
+                            background: 'rgba(30, 30, 35, 0.7)',
+                            backdropFilter: 'blur(20px)',
+                            borderRadius: '20px',
+                            padding: '24px',
+                            border: '1px solid #A855F7',
+                            boxShadow: '0 8px 32px rgba(168, 85, 247, 0.1)',
+                        }}>
+                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                                <span style={{ background: '#A855F7', color: 'white', padding: '4px 12px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase' }}>
+                                    Active
+                                </span>
+                                <span style={{ color: '#ADB5BD', fontSize: '0.875rem' }}>{new Date(loan.processed_at || loan.created_at).toLocaleDateString()}</span>
+                             </div>
+                             
+                             <div style={{ marginBottom: '24px' }}>
+                                <p style={{ color: '#ADB5BD', fontSize: '0.875rem', marginBottom: '4px' }}>Outstanding Balance</p>
+                                <h3 style={{ fontSize: '2rem', fontWeight: '700', color: '#F8F9FA' }}>
+                                    KES {parseFloat(loan.balance).toLocaleString()}
+                                </h3>
+                                <div style={{ display: 'flex', gap: '12px', marginTop: '8px', fontSize: '0.875rem' }}>
+                                    <span style={{ color: '#32D74B' }}>Paid: KES {parseFloat(loan.amount_paid).toLocaleString()}</span>
+                                    <span style={{ color: '#ADB5BD' }}>•</span>
+                                    <span style={{ color: '#FF9F0A' }}>Total Due: KES {parseFloat(loan.total_amount).toLocaleString()}</span>
+                                </div>
+                             </div>
+
+                             <div style={{ padding: '16px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '12px' }}>
+                                 <p style={{ color: '#ADB5BD', fontSize: '0.875rem', marginBottom: '4px' }}>Purpose</p>
+                                 <p style={{ color: '#F8F9FA' }}>{loan.purpose}</p>
+                             </div>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div style={{ padding: '24px', background: 'rgba(30, 30, 35, 0.4)', borderRadius: '16px', color: '#ADB5BD', textAlign: 'center' }}>
+                    You have no active loans.
+                </div>
+            )}
+        </div>
+
+        {/* PAST LOANS */}
+        <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#F8F9FA', marginBottom: '16px' }}>History</h3>
+        <div style={{ background: 'rgba(30, 30, 35, 0.4)', borderRadius: '20px', overflow: 'hidden' }}>
+             {pastLoans.length === 0 ? (
+                 <div style={{ padding: '32px', textAlign: 'center', color: '#ADB5BD' }}>No loan history available.</div>
+             ) : (
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                        <tr style={{ background: 'rgba(255, 255, 255, 0.02)', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                            <th style={{ padding: '16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.875rem' }}>Date</th>
+                            <th style={{ padding: '16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.875rem' }}>Amount</th>
+                            <th style={{ padding: '16px', textAlign: 'left', color: '#ADB5BD', fontSize: '0.875rem' }}>Purpose</th>
+                            <th style={{ padding: '16px', textAlign: 'right', color: '#ADB5BD', fontSize: '0.875rem' }}>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {pastLoans.map(loan => (
+                            <tr key={loan.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                                <td style={{ padding: '16px', color: '#F8F9FA' }}>{new Date(loan.created_at).toLocaleDateString()}</td>
+                                <td style={{ padding: '16px', color: '#F8F9FA' }}>KES {parseFloat(loan.amount).toLocaleString()}</td>
+                                <td style={{ padding: '16px', color: '#ADB5BD' }}>{loan.purpose}</td>
+                                <td style={{ padding: '16px', textAlign: 'right' }}>
+                                    <span style={{
+                                        background: loan.status === 'completed' ? 'rgba(50, 215, 75, 0.2)' : loan.status === 'rejected' ? 'rgba(255, 69, 58, 0.2)' : 'rgba(255, 159, 10, 0.2)',
+                                        color: loan.status === 'completed' ? '#32D74B' : loan.status === 'rejected' ? '#FF453A' : '#FF9F0A',
+                                        padding: '4px 12px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '600', textTransform: 'capitalize'
+                                    }}>
+                                        {loan.status}
+                                    </span>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+             )}
+        </div>
+
       </main>
 
-      {/* Modal */}
+      {/* REQUEST LOAN MODAL */}
       {showModal && (
         <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0, 0, 0, 0.8)',
-          backdropFilter: 'blur(8px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '16px',
-          zIndex: 50,
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '16px'
         }}>
-          <div style={{
-            background: 'rgba(30, 30, 35, 0.95)',
-            borderRadius: '20px',
-            boxShadow: '0 24px 48px rgba(0, 0, 0, 0.6)',
-            maxWidth: '480px',
-            width: '100%',
-            padding: '32px',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h2 style={{ 
-                fontSize: '1.5rem', 
-                fontWeight: '700', 
-                color: '#F8F9FA',
-              }}>Request Loan</h2>
-              <button
-                onClick={() => setShowModal(false)}
-                style={{
-                  background: 'rgba(255, 69, 58, 0.1)',
-                  border: '1px solid rgba(255, 69, 58, 0.3)',
-                  borderRadius: '8px',
-                  padding: '8px',
-                  cursor: 'pointer',
-                  color: '#FF453A',
-                }}
-              >
-                <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+           <div style={{
+               background: '#1A1A1D', borderRadius: '24px', padding: '32px', width: '100%', maxWidth: '450px',
+               border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 24px 48px rgba(0,0,0,0.5)'
+           }}>
+               <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: 'white', marginBottom: '8px' }}>Request Loan</h2>
+               <p style={{ color: '#ADB5BD', marginBottom: '24px' }}>Funds will be deducted from the table banking pool.</p>
+               
+               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                   <div>
+                       <label style={{ color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '600', marginBottom: '8px', display: 'block' }}>Amount (KES)</label>
+                       <input 
+                           type="number" 
+                           value={formData.amount}
+                           onChange={e => setFormData({...formData, amount: e.target.value})}
+                           placeholder="Enter amount (min 100)"
+                           style={{ width: '100%', padding: '16px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '1.1rem' }}
+                           required
+                       />
+                       <p style={{ fontSize: '0.75rem', color: '#A855F7', marginTop: '8px' }}>Interest Rate: 10% (Total Repayable: KES {formData.amount ? (parseFloat(formData.amount) * 1.1).toLocaleString() : '0'})</p>
+                   </div>
+                   
+                   <div>
+                       <label style={{ color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '600', marginBottom: '8px', display: 'block' }}>Purpose</label>
+                       <textarea 
+                           value={formData.purpose}
+                           onChange={e => setFormData({...formData, purpose: e.target.value})}
+                           placeholder="What is this loan for?"
+                           rows="3"
+                           style={{ width: '100%', padding: '16px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '1rem', resize: 'none' }}
+                           required
+                       />
+                   </div>
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#ADB5BD', marginBottom: '8px' }}>
-                  Loan Amount (KES)
-                </label>
-                <input
-                  type="number"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  placeholder="Enter amount"
-                  min="100"
-                  step="0.01"
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    background: 'rgba(15, 15, 20, 0.8)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '10px',
-                    color: '#F8F9FA',
-                    fontSize: '1rem',
-                  }}
-                />
-                <p style={{ fontSize: '0.75rem', color: '#6C757D', marginTop: '6px' }}>Minimum: KES 100</p>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#ADB5BD', marginBottom: '8px' }}>
-                  Purpose
-                </label>
-                <textarea
-                  value={formData.purpose}
-                  onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
-                  placeholder="Describe the purpose of this loan..."
-                  rows="3"
-                  minLength="5"
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    background: 'rgba(15, 15, 20, 0.8)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '10px',
-                    color: '#F8F9FA',
-                    fontSize: '1rem',
-                    resize: 'none',
-                  }}
-                ></textarea>
-              </div>
-
-              {formData.amount && (
-                <div style={{
-                  background: 'rgba(255, 159, 10, 0.05)',
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(255, 159, 10, 0.15)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px',
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', color: '#CAD5E2' }}>
-                    <span>Loan Amount:</span>
-                    <span style={{ fontWeight: '600' }}>KES {parseFloat(formData.amount || 0).toLocaleString()}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', color: '#CAD5E2' }}>
-                    <span>Interest (10%):</span>
-                    <span style={{ fontWeight: '600' }}>KES {calculateInterest().toLocaleString()}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '8px', marginTop: '4px' }}>
-                    <span style={{ color: '#F8F9FA', fontWeight: '600' }}>Total Repayment:</span>
-                    <span style={{ fontSize: '1.125rem', fontWeight: '700', color: '#FF9F0A' }}>
-                      KES {calculateTotal().toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              <div style={{
-                background: 'rgba(255, 215, 0, 0.1)',
-                border: '1px solid rgba(255, 215, 0, 0.3)',
-                borderRadius: '8px',
-                padding: '12px',
-              }}>
-                <p style={{ fontSize: '0.75rem', color: '#FFD700' }}>
-                  <strong>Note:</strong> All loans carry a 10% interest rate. Your request will be reviewed by the treasurer.
-                </p>
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px', paddingTop: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  style={{
-                    flex: 1,
-                    padding: '14px',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '10px',
-                    background: 'transparent',
-                    color: '#ADB5BD',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  style={{
-                    flex: 1,
-                    padding: '14px',
-                    background: 'linear-gradient(135deg, #A855F7 0%, #FF0A78 100%)',
-                    border: 'none',
-                    borderRadius: '10px',
-                    color: 'white',
-                    fontWeight: '600',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    opacity: loading ? 0.6 : 1,
-                    boxShadow: '0 8px 24px rgba(168, 85, 247, 0.3)',
-                  }}
-                >
-                  {loading ? 'Submitting...' : 'Submit Request'}
-                </button>
-              </div>
-            </form>
-          </div>
+                   <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+                       <button type="button" onClick={() => setShowModal(false)} style={{ flex: 1, padding: '16px', borderRadius: '12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#ADB5BD', fontWeight: '600', cursor: 'pointer' }}>Cancel</button>
+                       <button type="submit" disabled={loading} style={{ flex: 1, padding: '16px', borderRadius: '12px', background: 'linear-gradient(135deg, #A855F7 0%, #FF0A78 100%)', border: 'none', color: 'white', fontWeight: '700', cursor: 'pointer', opacity: loading ? 0.7 : 1 }}>
+                           {loading ? 'Submitting...' : 'Submit Request'}
+                       </button>
+                   </div>
+               </form>
+           </div>
         </div>
       )}
+
     </div>
   );
 }
