@@ -50,6 +50,12 @@ export default function AdminPage() {
   const [complianceYear, setComplianceYear] = useState(new Date().getFullYear());
   const [complianceResults, setComplianceResults] = useState([]);
 
+  // Reports State
+  const [reportType, setReportType] = useState('monthly'); // monthly, loans, summary
+  const [reportData, setReportData] = useState([]);
+  const [reportMonth, setReportMonth] = useState('');
+  const [reportYear, setReportYear] = useState(new Date().getFullYear());
+
   useEffect(() => {
     checkAuth();
   }, []);
@@ -75,6 +81,33 @@ export default function AdminPage() {
         alert('Compliance check complete. Check the results below.');
       } catch (err) {
           alert('Error: ' + err.message);
+      } finally {
+          setLoading(false);
+      }
+  };
+
+  const generateReport = async () => {
+      setLoading(true);
+      setReportData([]);
+      try {
+          let rpcName = '';
+          let params = {};
+
+          if (reportType === 'monthly') {
+              if (!reportMonth) { alert('Select a month'); setLoading(false); return; }
+              rpcName = 'get_monthly_contributions_report';
+              params = { p_month: reportMonth, p_year: parseInt(reportYear) };
+          } else if (reportType === 'loans') {
+              rpcName = 'get_loan_risk_report';
+          } else if (reportType === 'summary') {
+              rpcName = 'get_member_financial_summary';
+          }
+
+          const { data, error } = await supabase.rpc(rpcName, params);
+          if (error) throw error;
+          setReportData(data || []);
+      } catch (e) {
+          alert('Error: ' + e.message);
       } finally {
           setLoading(false);
       }
@@ -460,7 +493,8 @@ export default function AdminPage() {
             { id: 'loans', label: `Pending Loans (${pendingLoans.length})`, color: '#A855F7' },
             { id: 'payments', label: `Record Loan Payment`, color: '#0A84FF' },
             { id: 'members_accounts', label: `Member Accounts`, color: '#FFD700' },
-            { id: 'defaults', label: `⚠️ Check Defaults`, color: '#EF4444' }
+            { id: 'defaults', label: `⚠️ Check Defaults`, color: '#EF4444' },
+            { id: 'reports', label: `📄 Reports`, color: '#6366F1' }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -628,6 +662,126 @@ export default function AdminPage() {
                 </div>
              )}
           </div>
+        )}
+
+        {/* Reports Tab */}
+        {activeTab === 'reports' && (
+           <div style={{ background: 'rgba(30, 30, 35, 0.7)', backdropFilter: 'blur(20px)', borderRadius: '16px', padding: '24px', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#F8F9FA', marginBottom: '16px' }}>📄 Generate Reports</h2>
+              
+              <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <select value={reportType} onChange={e => setReportType(e.target.value)} style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid #333' }}>
+                      <option value="monthly">Monthly Contributions</option>
+                      <option value="loans">Loan Risk Analysis</option>
+                      <option value="summary">Member Financial Summary</option>
+                  </select>
+
+                  {reportType === 'monthly' && (
+                     <>
+                        <select value={reportMonth} onChange={e => setReportMonth(e.target.value)} style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid #333' }}>
+                           <option value="">Select Month</option>
+                           {months.map(m => <option key={m} value={m}>{m}</option>)}
+                        </select>
+                        <select value={reportYear} onChange={e => setReportYear(e.target.value)} style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid #333' }}>
+                           <option value="2025">2025</option>
+                           <option value="2026">2026</option>
+                        </select>
+                     </>
+                  )}
+
+                  <button onClick={generateReport} disabled={loading} style={{ padding: '12px 24px', background: '#6366F1', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer' }}>
+                      {loading ? 'Generating...' : 'Generate View'}
+                  </button>
+              </div>
+
+              {/* Dynamic Table */}
+              {reportData.length > 0 ? (
+                  <div style={{ overflowX: 'auto', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+                          <thead style={{ background: 'rgba(255,255,255,0.05)' }}>
+                              <tr style={{ textAlign: 'left', color: '#ADB5BD' }}>
+                                  {/* Headers based on Type */}
+                                  {reportType === 'monthly' && (
+                                     <>
+                                        <th style={{ padding: '12px' }}>Member</th>
+                                        <th style={{ padding: '12px' }}>Table Banking</th>
+                                        <th style={{ padding: '12px' }}>Savings</th>
+                                        <th style={{ padding: '12px' }}>Total</th>
+                                        <th style={{ padding: '12px' }}>Method</th>
+                                        <th style={{ padding: '12px' }}>Status</th>
+                                        <th style={{ padding: '12px' }}>Date</th>
+                                     </>
+                                  )}
+                                  {reportType === 'loans' && (
+                                     <>
+                                        <th style={{ padding: '12px' }}>Member</th>
+                                        <th style={{ padding: '12px' }}>Borrowed</th>
+                                        <th style={{ padding: '12px' }}>Repayable</th>
+                                        <th style={{ padding: '12px' }}>Paid</th>
+                                        <th style={{ padding: '12px' }}>Balance</th>
+                                        <th style={{ padding: '12px' }}>Status</th>
+                                        <th style={{ padding: '12px' }}>Date</th>
+                                     </>
+                                  )}
+                                  {reportType === 'summary' && (
+                                     <>
+                                        <th style={{ padding: '12px' }}>Member</th>
+                                        <th style={{ padding: '12px' }}>Total Shares</th>
+                                        <th style={{ padding: '12px' }}>Total Savings</th>
+                                        <th style={{ padding: '12px' }}>Active Loan Bal</th>
+                                        <th style={{ padding: '12px' }}>Net Standing</th>
+                                     </>
+                                  )}
+                              </tr>
+                          </thead>
+                          <tbody>
+                              {reportData.map((row, i) => (
+                                  <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                      <td style={{ padding: '12px', color: '#F8F9FA' }}>{row.member_name}</td>
+                                      
+                                      {reportType === 'monthly' && (
+                                         <>
+                                            <td style={{ padding: '12px', color: '#32D74B' }}>{parseFloat(row.table_banking).toLocaleString()}</td>
+                                            <td style={{ padding: '12px', color: '#A855F7' }}>{parseFloat(row.bank_savings).toLocaleString()}</td>
+                                            <td style={{ padding: '12px', fontWeight: '700', color: '#F8F9FA' }}>{parseFloat(row.total_paid).toLocaleString()}</td>
+                                            <td style={{ padding: '12px', textTransform: 'uppercase', fontSize: '0.75rem' }}>{row.payment_method}</td>
+                                            <td style={{ padding: '12px' }}>{row.status}</td>
+                                            <td style={{ padding: '12px', color: '#ADB5BD' }}>{new Date(row.paid_at).toLocaleDateString()}</td>
+                                         </>
+                                      )}
+
+                                      {reportType === 'loans' && (
+                                         <>
+                                            <td style={{ padding: '12px' }}>{parseFloat(row.amount_borrowed).toLocaleString()}</td>
+                                            <td style={{ padding: '12px' }}>{parseFloat(row.total_repayable).toLocaleString()}</td>
+                                            <td style={{ padding: '12px', color: '#32D74B' }}>{parseFloat(row.amount_paid).toLocaleString()}</td>
+                                            <td style={{ padding: '12px', color: '#EF4444', fontWeight: '700' }}>{parseFloat(row.balance).toLocaleString()}</td>
+                                            <td style={{ padding: '12px', textTransform: 'uppercase' }}>{row.status}</td>
+                                            <td style={{ padding: '12px' }}>{new Date(row.loan_date).toLocaleDateString()}</td>
+                                         </>
+                                      )}
+
+                                      {reportType === 'summary' && (
+                                         <>
+                                            <td style={{ padding: '12px', color: '#32D74B' }}>{parseFloat(row.total_shares).toLocaleString()}</td>
+                                            <td style={{ padding: '12px', color: '#A855F7' }}>{parseFloat(row.total_savings).toLocaleString()}</td>
+                                            <td style={{ padding: '12px', color: '#EF4444' }}>{parseFloat(row.active_loan_balance).toLocaleString()}</td>
+                                            <td style={{ padding: '12px', fontWeight: '700', color: '#F8F9FA' }}>
+                                                {(parseFloat(row.total_shares) + parseFloat(row.total_savings) - parseFloat(row.active_loan_balance)).toLocaleString()}
+                                            </td>
+                                         </>
+                                      )}
+                                  </tr>
+                              ))}
+                          </tbody>
+                      </table>
+                  </div>
+              ) : (
+                  <div style={{ padding: '32px', textAlign: 'center', color: '#ADB5BD', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '12px' }}>
+                      Click 'Generate View' to see data.
+                  </div>
+              )}
+           </div>
         )}
 
         {/* Record New Contribution Tab */}
