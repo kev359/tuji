@@ -173,7 +173,7 @@ export default function LoginPage() {
           >
             Sign In
           </button>
-          <button
+          {/* <button
             onClick={() => { setIsSignUp(true); setError(''); setSuccess(''); }}
             style={{
               flex: 1,
@@ -192,7 +192,7 @@ export default function LoginPage() {
             }}
           >
             Sign Up
-          </button>
+          </button> */}
         </div>
 
         {/* Form Section */}
