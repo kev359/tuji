@@ -447,7 +447,7 @@ export default function LoginPage() {
             color: '#9CA3AF',
             margin: 0,
           }}>
-            🔒 Secure platform powered by Supabase
+            🔒 Secure platform powered by STEM ED
           </p>
         </div>
       </div>
