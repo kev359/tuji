@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Navbar from '@/components/Navbar';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -95,7 +97,7 @@ export default function AdminPage() {
 
           if (reportType === 'monthly') {
               if (!reportMonth) { alert('Select a month'); setLoading(false); return; }
-              rpcName = 'get_monthly_contributions_report';
+              rpcName = 'get_monthly_comprehensive_report';
               params = { p_month: reportMonth, p_year: parseInt(reportYear) };
           } else if (reportType === 'loans') {
               rpcName = 'get_loan_risk_report';
@@ -111,6 +113,62 @@ export default function AdminPage() {
       } finally {
           setLoading(false);
       }
+  };
+
+  const downloadPDF = () => {
+    if (reportData.length === 0) { alert('No data to export!'); return; }
+    
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text(`Tujiimarishe Group Report: ${reportType.toUpperCase()}`, 14, 20);
+    
+    doc.setFontSize(12);
+    if (reportType === 'monthly') doc.text(`Period: ${reportMonth} ${reportYear}`, 14, 28);
+    else doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 28);
+
+    let head = [];
+    let body = [];
+
+    if (reportType === 'monthly') {
+        head = [['Member', 'Table Banking', 'Savings', 'Loans Taken', 'Repayments', 'Net Group Flow']];
+         body = reportData.map(r => [
+            r.member_name, 
+            (parseFloat(r.table_banking)||0).toLocaleString(), 
+            (parseFloat(r.bank_savings)||0).toLocaleString(), 
+            (parseFloat(r.loans_taken)||0).toLocaleString(), 
+            (parseFloat(r.total_repaid)||0).toLocaleString(), 
+            (parseFloat(r.net_activity)||0).toLocaleString()
+        ]);
+    } else if (reportType === 'loans') {
+        head = [['Member', 'Borrowed', 'To Pay', 'Paid', 'Balance', 'Status']];
+        body = reportData.map(r => [
+            r.member_name,
+            parseFloat(r.amount_borrowed).toLocaleString(),
+            parseFloat(r.total_repayable).toLocaleString(),
+            parseFloat(r.amount_paid).toLocaleString(),
+            parseFloat(r.balance).toLocaleString(),
+            r.status
+        ]);
+    } else if (reportType === 'summary') {
+         head = [['Member', 'Total Shares', 'Total Savings', 'Loan Debt', 'Net Standing']];
+         body = reportData.map(r => [
+             r.member_name,
+             parseFloat(r.total_shares).toLocaleString(),
+             parseFloat(r.total_savings).toLocaleString(),
+             parseFloat(r.active_loan_balance).toLocaleString(),
+             (parseFloat(r.total_shares) + parseFloat(r.total_savings) - parseFloat(r.active_loan_balance)).toLocaleString()
+         ]);
+    }
+
+    doc.autoTable({
+        startY: 35,
+        head: head,
+        body: body,
+        theme: 'grid',
+        headStyles: { fillColor: [99, 102, 241] },
+    });
+
+    doc.save(`tuji_report_${reportType}_${new Date().getTime()}.pdf`);
   };
 
   const openMemberDetails = async (member) => {
@@ -692,6 +750,11 @@ export default function AdminPage() {
                   <button onClick={generateReport} disabled={loading} style={{ padding: '12px 24px', background: '#6366F1', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer' }}>
                       {loading ? 'Generating...' : 'Generate View'}
                   </button>
+                  {reportData.length > 0 && (
+                      <button onClick={downloadPDF} style={{ padding: '12px 24px', background: '#10B981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', marginLeft: 'auto' }}>
+                          ⬇️ Export to PDF
+                      </button>
+                  )}
               </div>
 
               {/* Dynamic Table */}
@@ -706,10 +769,10 @@ export default function AdminPage() {
                                         <th style={{ padding: '12px' }}>Member</th>
                                         <th style={{ padding: '12px' }}>Table Banking</th>
                                         <th style={{ padding: '12px' }}>Savings</th>
-                                        <th style={{ padding: '12px' }}>Total</th>
-                                        <th style={{ padding: '12px' }}>Method</th>
-                                        <th style={{ padding: '12px' }}>Status</th>
-                                        <th style={{ padding: '12px' }}>Date</th>
+                                        <th style={{ padding: '12px' }}>Total Contrib</th>
+                                        <th style={{ padding: '12px' }}>Loans Taken</th>
+                                        <th style={{ padding: '12px' }}>Repayments</th>
+                                        <th style={{ padding: '12px' }}>Net Cash Flow</th>
                                      </>
                                   )}
                                   {reportType === 'loans' && (
@@ -741,12 +804,12 @@ export default function AdminPage() {
                                       
                                       {reportType === 'monthly' && (
                                          <>
-                                            <td style={{ padding: '12px', color: '#32D74B' }}>{parseFloat(row.table_banking).toLocaleString()}</td>
-                                            <td style={{ padding: '12px', color: '#A855F7' }}>{parseFloat(row.bank_savings).toLocaleString()}</td>
-                                            <td style={{ padding: '12px', fontWeight: '700', color: '#F8F9FA' }}>{parseFloat(row.total_paid).toLocaleString()}</td>
-                                            <td style={{ padding: '12px', textTransform: 'uppercase', fontSize: '0.75rem' }}>{row.payment_method}</td>
-                                            <td style={{ padding: '12px' }}>{row.status}</td>
-                                            <td style={{ padding: '12px', color: '#ADB5BD' }}>{new Date(row.paid_at).toLocaleDateString()}</td>
+                                            <td style={{ padding: '12px', color: '#32D74B' }}>{parseFloat(row.table_banking||0).toLocaleString()}</td>
+                                            <td style={{ padding: '12px', color: '#A855F7' }}>{parseFloat(row.bank_savings||0).toLocaleString()}</td>
+                                            <td style={{ padding: '12px', fontWeight: '700', color: '#F8F9FA' }}>{parseFloat(row.total_contributions||0).toLocaleString()}</td>
+                                            <td style={{ padding: '12px', color: '#EF4444' }}>{parseFloat(row.loans_taken||0).toLocaleString()}</td>
+                                            <td style={{ padding: '12px', color: '#10B981' }}>{parseFloat(row.total_repaid||0).toLocaleString()}</td>
+                                            <td style={{ padding: '12px', fontWeight: '700' }}>{parseFloat(row.net_activity||0).toLocaleString()}</td>
                                          </>
                                       )}
 

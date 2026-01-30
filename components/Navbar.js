@@ -30,6 +30,7 @@ export default function Navbar() {
   const navLinks = [
     { href: '/dashboard', label: 'Dashboard', color: '#FF9F0A' },
     { href: '/contributions', label: 'Contributions', color: '#00D9C0' },
+    { href: '/reports', label: 'Reports', color: '#6366F1' },
     { href: '/loans', label: 'Loans', color: '#A855F7' },
     { href: '/members', label: 'Members', color: '#0A84FF' },
   ];
