@@ -264,7 +264,73 @@ export default function DashboardPage() {
               </div>
               <p style={{ color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '500', marginBottom: '4px' }}>Bank Savings (MMF/I&M)</p>
               <h3 style={{ fontSize: '2rem', fontWeight: '700', color: '#F8F9FA' }}>
-                KES {parseFloat(groupStats.total_savings || 0).toLocaleString()}
+                KES {parseFloat(groupStats.total_bank_savings || 0).toLocaleString()}
+              </h3>
+            </div>
+
+            {/* Total Loans Given */}
+            <div style={{
+               background: 'linear-gradient(135deg, rgba(255, 69, 58, 0.1) 0%, rgba(255, 69, 58, 0.05) 100%)',
+               backdropFilter: 'blur(20px)',
+               borderRadius: '20px',
+               padding: '24px',
+               border: '1px solid rgba(255, 69, 58, 0.3)',
+               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 69, 58, 0.1)',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '12px',
+                  background: 'rgba(255, 69, 58, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <span style={{ fontSize: '1.5rem' }}>💸</span>
+                </div>
+              </div>
+              <p style={{ color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '500', marginBottom: '4px' }}>Total Loans Disbursed</p>
+              <h3 style={{ fontSize: '2rem', fontWeight: '700', color: '#F8F9FA' }}>
+                KES {parseFloat(groupStats.total_loans_given || 0).toLocaleString()}
+              </h3>
+            </div>
+
+            {/* Expected Interest */}
+            <div style={{
+               background: 'linear-gradient(135deg, rgba(50, 215, 75, 0.1) 0%, rgba(10, 132, 255, 0.1) 100%)',
+               backdropFilter: 'blur(20px)',
+               borderRadius: '20px',
+               padding: '24px',
+               border: '1px solid rgba(10, 132, 255, 0.3)',
+               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(10, 132, 255, 0.1)',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '12px',
+                  background: 'rgba(10, 132, 255, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <span style={{ fontSize: '1.5rem' }}>📈</span>
+                </div>
+                 <span style={{ 
+                  background: 'rgba(255, 255, 255, 0.1)', 
+                  color: '#F8F9FA', 
+                  fontSize: '0.75rem', 
+                  fontWeight: '700', 
+                  padding: '4px 8px', 
+                  borderRadius: '6px' 
+                }}>
+                  PROJECTED
+                </span>
+              </div>
+              <p style={{ color: '#ADB5BD', fontSize: '0.875rem', fontWeight: '500', marginBottom: '4px' }}>Total Interest Expected</p>
+              <h3 style={{ fontSize: '2rem', fontWeight: '700', color: '#F8F9FA' }}>
+                KES {parseFloat(groupStats.total_interest_expected || 0).toLocaleString()}
               </h3>
             </div>
           </div>

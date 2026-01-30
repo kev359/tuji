@@ -46,9 +46,39 @@ export default function AdminPage() {
     reference_code: '',
   });
 
+  const [complianceMonth, setComplianceMonth] = useState('');
+  const [complianceYear, setComplianceYear] = useState(new Date().getFullYear());
+  const [complianceResults, setComplianceResults] = useState([]);
+
   useEffect(() => {
     checkAuth();
   }, []);
+
+  const runComplianceCheck = async () => {
+      if (!complianceMonth) {
+          alert('Please select a month');
+          return;
+      }
+      if (!confirm(`Are you sure you want to run the compliance check for ${complianceMonth} ${complianceYear}? This will create loans for anyone who has missed the Table Banking contribution.`)) {
+          return;
+      }
+
+      setLoading(true);
+      try {
+        const { data, error } = await supabase.rpc('process_monthly_defaults', {
+            p_month: complianceMonth,
+            p_year: parseInt(complianceYear)
+        });
+
+        if (error) throw error;
+        setComplianceResults(data || []);
+        alert('Compliance check complete. Check the results below.');
+      } catch (err) {
+          alert('Error: ' + err.message);
+      } finally {
+          setLoading(false);
+      }
+  };
 
   const openMemberDetails = async (member) => {
     setLoading(true);
@@ -429,7 +459,8 @@ export default function AdminPage() {
             { id: 'contributions', label: `Pending Contribs (${pendingContributions.length})`, color: '#32D74B' },
             { id: 'loans', label: `Pending Loans (${pendingLoans.length})`, color: '#A855F7' },
             { id: 'payments', label: `Record Loan Payment`, color: '#0A84FF' },
-            { id: 'members_accounts', label: `Member Accounts`, color: '#FFD700' }
+            { id: 'members_accounts', label: `Member Accounts`, color: '#FFD700' },
+            { id: 'defaults', label: `⚠️ Check Defaults`, color: '#EF4444' }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -513,6 +544,89 @@ export default function AdminPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {/* Defaults Check Tab */}
+        {activeTab === 'defaults' && (
+          <div style={{
+            background: 'rgba(30, 30, 35, 0.7)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: '16px',
+            padding: '24px',
+            border: '1px solid rgba(255, 69, 58, 0.3)',
+            boxShadow: '0 8px 32px rgba(255, 69, 58, 0.1)',
+          }}>
+             <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#F8F9FA', marginBottom: '16px' }}>⚠️ Run Compliance Check</h2>
+             <p style={{ color: '#ADB5BD', marginBottom: '24px' }}>
+                This tool checks for members who have NOT contributed the mandatory Table Banking (KES 1,000) by the 8th of the selected month.
+                <br/>
+                It automatically creates a <strong>Loan of KES 1,000 + 10% Interest</strong> for defaulters.
+             </p>
+
+             <div style={{ display: 'flex', gap: '16px', marginBottom: '32px', flexWrap: 'wrap' }}>
+                 <select 
+                    value={complianceMonth} 
+                    onChange={e => setComplianceMonth(e.target.value)}
+                    style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid #333' }}
+                 >
+                     <option value="">Select Month</option>
+                     {months.map(m => <option key={m} value={m}>{m}</option>)}
+                 </select>
+                 <select 
+                    value={complianceYear} 
+                    onChange={e => setComplianceYear(e.target.value)}
+                    style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid #333' }}
+                 >
+                     <option value="2025">2025</option>
+                     <option value="2026">2026</option>
+                 </select>
+                 <button 
+                    onClick={runComplianceCheck}
+                    disabled={loading}
+                    style={{
+                        padding: '12px 24px',
+                        background: '#EF4444',
+                        color: 'white',
+                        fontWeight: '700',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        opacity: loading ? 0.7 : 1
+                    }}
+                 >
+                    {loading ? 'Analyzing...' : '⚠️ Check & Penalize Defaults'}
+                 </button>
+             </div>
+
+             {complianceResults.length > 0 && (
+                <div style={{ marginTop: '24px', overflowX: 'auto' }}>
+                    <h3 style={{ color: '#F8F9FA', marginBottom: '12px' }}>Results</h3>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                            <tr style={{ textAlign: 'left', color: '#ADB5BD', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                                <th style={{ padding: '8px' }}>Member</th>
+                                <th style={{ padding: '8px' }}>Result</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {complianceResults.map((res, i) => (
+                                <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <td style={{ padding: '12px', color: '#F8F9FA' }}>{res.member_name}</td>
+                                    <td style={{ padding: '12px' }}>
+                                        <span style={{
+                                            color: res.result.includes('Created') ? '#EF4444' : res.result.includes('Paid') ? '#32D74B' : '#F59E0B',
+                                            fontWeight: '600'
+                                        }}>
+                                            {res.result}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+             )}
           </div>
         )}
 

@@ -1,34 +1,52 @@
--- Create a function to get group stats securely (bypassing RLS)
-create or replace function get_group_stats()
-returns json as $$
-declare
-  total_interest decimal;
-  total_savings decimal;
-  total_table_banking decimal;
-begin
-  -- Calculate total interest from loans (Active + Completed)
-  -- Interest = Total Repayable - Principal Amount
-  select coalesce(sum(total_repayable - amount), 0)
-  into total_interest
-  from loans
-  where status in ('active', 'completed');
+CREATE OR REPLACE FUNCTION get_group_stats()
+RETURNS json
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    total_interest decimal;
+    total_table_banking decimal;
+    total_bank_savings decimal;
+    total_loans_given decimal;
+    total_interest_expected decimal;
+BEGIN
+    -- 1. Calculate Total Interest Earned (Completed Loans)
+    SELECT COALESCE(SUM(interest_amount), 0)
+    INTO total_interest
+    FROM loans
+    WHERE status = 'completed';
 
-  -- Calculate total Bank Savings (MMF/I&M)
-  select coalesce(sum(bank_savings_amount), 0)
-  into total_savings
-  from contributions
-  where status = 'confirmed';
+    -- 2. Calculate Total Interest Expected (Active + Pending Loans)
+    -- We include active because we expect to get it.
+    SELECT COALESCE(SUM(interest_amount), 0)
+    INTO total_interest_expected
+    FROM loans
+    WHERE status IN ('active', 'completed');
 
-  -- Calculate total Table Banking Pool
-  select coalesce(sum(table_banking_amount), 0)
-  into total_table_banking
-  from contributions
-  where status = 'confirmed';
+    -- 3. Calculate Total Loans Given (Principal of all approved loans)
+    SELECT COALESCE(SUM(amount), 0)
+    INTO total_loans_given
+    FROM loans
+    WHERE status IN ('active', 'completed');
 
-  return json_build_object(
-    'total_interest', total_interest,
-    'total_savings', total_savings,
-    'total_table_banking', total_table_banking
-  );
-end;
-$$ language plpgsql security definer;
+    -- 4. Calculate Total Table Banking Pool (Confirmed Contributions)
+    SELECT COALESCE(SUM(table_banking_amount), 0)
+    INTO total_table_banking
+    FROM contributions
+    WHERE status = 'confirmed';
+
+    -- 5. Calculate Total Bank Savings (MMF/I&M)
+    SELECT COALESCE(SUM(bank_savings_amount), 0)
+    INTO total_bank_savings
+    FROM contributions
+    WHERE status = 'confirmed';
+
+    RETURN json_build_object(
+        'total_interest', total_interest,
+        'total_interest_expected', total_interest_expected,
+        'total_loans_given', total_loans_given,
+        'total_table_banking', total_table_banking,
+        'total_bank_savings', total_bank_savings
+    );
+END;
+$$;
